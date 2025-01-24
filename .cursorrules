@@ -1,0 +1,4 @@
+Unity capitalization:
+ - public string MyVariable;
+ - private string _myVariable;
+ - public string MyFunction();
