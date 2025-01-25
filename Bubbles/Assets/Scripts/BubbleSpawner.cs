@@ -43,8 +43,9 @@ public class BubbleSpawner : MonoBehaviour
 
         // Instantiate the bubble
         GameObject bubble = Instantiate(BubblePrefab, randomPosition, Quaternion.identity);
+        bubble.name = BubblePrefab.name;
 
-        // Set random radius
+        // Set bubble properties
         Bubble bubbleComponent = bubble.GetComponent<Bubble>();
         if (bubbleComponent != null)
         {
@@ -53,7 +54,7 @@ public class BubbleSpawner : MonoBehaviour
                 GameRules.Data.MaxBubbleSize
             );
             bubbleComponent.CoreSizeRatio = GameRules.Data.CoreSizeRatio;
-            bubbleComponent.Hue = Random.Range(0f, 1f);
+            bubbleComponent.Variant = Random.Range(0, GameRules.Data.VariantCount);
         }
 
         // Apply random force in random direction

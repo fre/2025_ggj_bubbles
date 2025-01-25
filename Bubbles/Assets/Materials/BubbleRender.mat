@@ -63,10 +63,13 @@ Material:
     m_Ints: []
     m_Floats:
     - BubbleCount: 65.31
-    - _BubbleCount: 4
+    - _BubbleCount: 20
+    - _CoreOpacity: 0.2
+    - _EdgeOpacity: 1
     - _EnableExternalAlpha: 0
     - _Float: 0
     - _MaxBubbleCount: 100
+    - _OpacityFalloff: 2.28
     - _OutlineThickness: 0.05
     - _QueueControl: 0
     - _QueueOffset: 0

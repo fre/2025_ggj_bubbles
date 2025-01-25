@@ -8,6 +8,12 @@ public class BubbleRenderer : MonoBehaviour
   private static readonly int BubbleCountProperty = Shader.PropertyToID("_BubbleCount");
   private static readonly int MaxBubbleCountProperty = Shader.PropertyToID("_MaxBubbleCount");
   private static readonly int OutlineThicknessProperty = Shader.PropertyToID("_OutlineThickness");
+  private static readonly int CoreOpacityProperty = Shader.PropertyToID("_CoreOpacity");
+  private static readonly int EdgeOpacityProperty = Shader.PropertyToID("_EdgeOpacity");
+  private static readonly int OpacityFalloffProperty = Shader.PropertyToID("_OpacityFalloff");
+  private static readonly int OpacitySmoothingProperty = Shader.PropertyToID("_OpacitySmoothing");
+  private static readonly int OutlineColorProperty = Shader.PropertyToID("_OutlineColor");
+  private static readonly int BackgroundColorProperty = Shader.PropertyToID("_BackgroundColor");
 
   private Material _material;
   private Texture2D _bubbleDataTexture;
@@ -30,10 +36,21 @@ public class BubbleRenderer : MonoBehaviour
     _bubbleDataTexture.SetPixels(initialData);
     _bubbleDataTexture.Apply();
 
-    // Assign texture and world space ranges
+    // Assign texture and shader properties
     _material.SetTexture(BubbleDataProperty, _bubbleDataTexture);
     _material.SetFloat(MaxBubbleCountProperty, GameRules.Data.MaxBubbles);
+    UpdateShaderProperties();
+  }
+
+  private void UpdateShaderProperties()
+  {
     _material.SetFloat(OutlineThicknessProperty, GameRules.Data.OutlineThickness);
+    _material.SetFloat(CoreOpacityProperty, GameRules.Data.CoreOpacity);
+    _material.SetFloat(EdgeOpacityProperty, GameRules.Data.EdgeOpacity);
+    _material.SetFloat(OpacityFalloffProperty, GameRules.Data.OpacityFalloff);
+    _material.SetFloat(OpacitySmoothingProperty, GameRules.Data.OpacitySmoothing);
+    _material.SetColor(OutlineColorProperty, GameRules.Data.OutlineColor);
+    _material.SetColor(BackgroundColorProperty, GameRules.Data.BackgroundColor);
   }
 
   private void LateUpdate()
@@ -49,7 +66,7 @@ public class BubbleRenderer : MonoBehaviour
       if (i < bubbleCount)
       {
         Vector3 worldPos = activeBubbles[i].transform.position;
-        float radius = activeBubbles[i].Size * 0.5f;
+        float radius = activeBubbles[i].Radius;
         float hue = activeBubbles[i].Hue;
 
         // Store raw world coordinates
@@ -65,9 +82,9 @@ public class BubbleRenderer : MonoBehaviour
     _bubbleDataTexture.SetPixels(bubbleData);
     _bubbleDataTexture.Apply();
 
-    // Update bubble count and outline thickness
+    // Update shader properties
     _material.SetFloat(BubbleCountProperty, bubbleCount);
-    _material.SetFloat(OutlineThicknessProperty, GameRules.Data.OutlineThickness);
+    UpdateShaderProperties();
   }
 
   private void OnDestroy()

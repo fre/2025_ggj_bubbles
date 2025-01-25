@@ -181,9 +181,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a26f82fe52fdad64aa2a37ba1ac04e89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maxForce: 2000
-  _maxSpeed: 20
+  _maxForce: 50000
+  _maxSpeed: 50
   _slowdownDistance: 0.5
+--- !u!1 &618241606
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 618241608}
+  - component: {fileID: 618241607}
+  m_Layer: 0
+  m_Name: BubbleInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &618241607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618241606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4aeae825d913d64f814ef938f3eddd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &618241608
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618241606}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &759534718
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,7 +266,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.17061234, g: 0.30152082, b: 0.509434, a: 0}
+  m_BackGroundColor: {r: 0.4, g: 0.43137255, b: 0.69803923, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1125,6 +1169,14 @@ PrefabInstance:
       propertyPath: Hue
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 559160758319332146, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
+      propertyPath: Size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 559160758319332146, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
+      propertyPath: Invulnerable
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1048164319020037151, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
       propertyPath: m_Name
       value: Bubble
@@ -1175,15 +1227,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3739650785662877542, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
       propertyPath: m_Color.b
-      value: 0.33935562
+      value: 0.4521182
       objectReference: {fileID: 0}
     - target: {fileID: 3739650785662877542, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
       propertyPath: m_Color.g
-      value: 0.33935562
+      value: 0.4521182
       objectReference: {fileID: 0}
     - target: {fileID: 3739650785662877542, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
       propertyPath: m_Color.r
-      value: 0.7735849
+      value: 0.754717
       objectReference: {fileID: 0}
     - target: {fileID: 3739650785662877542, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
       propertyPath: m_Enabled
@@ -1192,14 +1244,6 @@ PrefabInstance:
     - target: {fileID: 7364652562875353811, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
       propertyPath: m_Mass
       value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 8143102461621133006, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8143102461621133006, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
-      propertyPath: m_IsTrigger
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1218,4 +1262,5 @@ SceneRoots:
   - {fileID: 1047329110}
   - {fileID: 144871363}
   - {fileID: 1491154973}
+  - {fileID: 618241608}
   - {fileID: 1352068832}
