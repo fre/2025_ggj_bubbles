@@ -5,10 +5,15 @@ public class Bubble : MonoBehaviour
   [Header("Bubble Properties")]
   public float BubbleRadius = 1f;  // Visual and repulsion radius
   public float Hue = 0f;
+  public bool IsPopped { get; private set; }
 
   [Header("Collision Settings")]
   [SerializeField] private float _coreRadiusMultiplier = 0.6f;  // Multiplier of the standard 0.5 collider
   [SerializeField] private float _repulsionForce = 5f;
+
+  [Header("Pop Settings")]
+  [SerializeField] private float _popForce = 10f;
+  [SerializeField] private float _popRadius = 3f;
 
   private CircleCollider2D _coreCollider;
   private const float BASE_COLLIDER_RADIUS = 0.5f;  // Unity's default circle collider radius
@@ -56,6 +61,55 @@ public class Bubble : MonoBehaviour
         if (otherRb != null) otherRb.AddForce(-force, ForceMode2D.Force);
       }
     }
+  }
+
+  private void OnMouseDown()
+  {
+    if (!IsPopped)
+    {
+      // Get click position using camera ray
+      Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+      Plane plane = new Plane(Vector3.forward, 0); // z=0 plane
+
+      if (plane.Raycast(ray, out float distance))
+      {
+        Vector3 hitPoint = ray.GetPoint(distance);
+        float distanceToCenter = Vector2.Distance(new Vector2(hitPoint.x, hitPoint.y), (Vector2)transform.position);
+
+        // Use the outer bubble radius
+        if (distanceToCenter <= BubbleRadius)
+        {
+          Pop();
+        }
+      }
+    }
+  }
+
+  public void Pop()
+  {
+    IsPopped = true;
+
+    // Apply explosion force to nearby bubbles
+    Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, _popRadius);
+    foreach (Collider2D collider in nearbyColliders)
+    {
+      if (collider.gameObject != gameObject && collider.CompareTag("Bubble"))
+      {
+        Rigidbody2D rb = collider.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+          Vector2 direction = (collider.transform.position - transform.position).normalized;
+          float distance = Vector2.Distance(transform.position, collider.transform.position);
+          float force = Mathf.Lerp(_popForce, 0f, distance / _popRadius);
+          rb.AddForce(direction * force, ForceMode2D.Impulse);
+        }
+      }
+    }
+
+    // TODO: Add pop effect/particles here if desired
+
+    // Destroy the bubble
+    Destroy(gameObject);
   }
 
   private void OnDrawGizmos()
