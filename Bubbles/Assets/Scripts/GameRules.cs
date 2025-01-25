@@ -14,7 +14,6 @@ public class GameRules : ScriptableObject
         if (_instance == null)
         {
           Debug.LogError("GameRules not found in Resources folder! Please create one.");
-          _instance = CreateInstance<GameRules>();
         }
       }
       return _instance;
@@ -22,19 +21,22 @@ public class GameRules : ScriptableObject
   }
 
   [SerializeField] private GameRulesData _defaultRules;
-  public GameRulesData DefaultRules
+  private static GameRulesData _levelRules;
+
+  public static GameRulesData Data => _levelRules != null ? _levelRules : Instance._defaultRules;
+
+  public static void RegisterLevelRules(GameRulesData levelRules)
   {
-    get
+    _levelRules = levelRules;
+  }
+
+  public static void UnregisterLevelRules(GameRulesData levelRules)
+  {
+    if (_levelRules == levelRules)
     {
-      if (_defaultRules == null)
-      {
-        Debug.LogError("Default GameRulesData not set in GameRules asset!");
-        _defaultRules = CreateInstance<GameRulesData>();
-      }
-      return _defaultRules;
+      _levelRules = null;
     }
   }
 
-  // Simplified access to rules
-  public static GameRulesData Data => Instance.DefaultRules;
+  public static BubbleVariant BubbleVariantData(int variant) => Data.GetVariantData(variant);
 }

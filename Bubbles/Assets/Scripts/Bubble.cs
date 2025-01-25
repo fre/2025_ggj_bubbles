@@ -52,7 +52,8 @@ public class Bubble : MonoBehaviour
     _currentHoverT = Mathf.MoveTowards(_currentHoverT, targetHoverT, Time.deltaTime * GameRules.Data.HoverTransitionSpeed);
 
     // Check if bubble has grown too large
-    if (Size >= GameRules.Data.PopAtSize && !Invulnerable && !_isAnimating)
+    BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+    if (Size >= variantData.PopAtSize && !Invulnerable && !_isAnimating)
     {
       Pop();
     }
@@ -92,16 +93,20 @@ public class Bubble : MonoBehaviour
       float overlap = Mathf.Max(0, combinedRadii - distance);
       float overlapRatio = overlap / combinedRadii;
 
+      // Get variant data
+      BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+      BubbleVariant otherVariantData = GameRules.BubbleVariantData(otherBubble.Variant);
+
       // Check for matching variants and sufficient overlap
       if (Variant == otherBubble.Variant)
       {
-        if (GameRules.Data.PopMatchingVariants && overlapRatio >= GameRules.Data.MinOverlapToPop)
+        if (variantData.PopMatchingVariants && overlapRatio >= variantData.MinOverlapToPop)
         {
           Pop();
           otherBubble.Pop();
           return;
         }
-        else if (GameRules.Data.MergeMatchingVariants && overlapRatio >= GameRules.Data.MinOverlapToMerge)
+        else if (variantData.MergeMatchingVariants && overlapRatio >= variantData.MinOverlapToMerge)
         {
           MergeWith(otherBubble);
           return;
@@ -112,7 +117,7 @@ public class Bubble : MonoBehaviour
       if (distance < combinedRadii)
       {
         // Force based on penetration depth
-        float forceMagnitude = GameRules.Data.RepulsionForce * overlapRatio;
+        float forceMagnitude = variantData.RepulsionForce * overlapRatio;
 
         Vector2 force = direction * forceMagnitude;
 
@@ -146,6 +151,8 @@ public class Bubble : MonoBehaviour
   {
     try
     {
+      BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+
       // Play merge sound immediately
       if (_soundManager != null)
       {
@@ -153,17 +160,17 @@ public class Bubble : MonoBehaviour
       }
 
       // Wait for merge delay
-      if (GameRules.Data.MergeDelay > 0)
+      if (variantData.MergeDelay > 0)
       {
         float startTime = Time.time;
         float initialSize = Size;
         float otherInitialSize = other.Size;
 
         // Shrink animation
-        while (Time.time < startTime + GameRules.Data.MergeDelay)
+        while (Time.time < startTime + variantData.MergeDelay)
         {
-          float progress = (Time.time - startTime) / GameRules.Data.MergeDelay;
-          float currentShrink = Mathf.Lerp(1f, GameRules.Data.MergeSizeShrink, progress);
+          float progress = (Time.time - startTime) / variantData.MergeDelay;
+          float currentShrink = Mathf.Lerp(1f, variantData.MergeSizeShrink, progress);
 
           Size = initialSize * currentShrink;
           other.Size = otherInitialSize * currentShrink;
@@ -191,7 +198,7 @@ public class Bubble : MonoBehaviour
       // Set properties of new bubble
       newBubbleComponent.Size = newSize;
       newBubbleComponent.Variant = Variant;
-      newBubbleComponent.CoreSizeRatio = GameRules.Data.CoreSizeRatio;
+      newBubbleComponent.CoreSizeRatio = variantData.CoreSizeRatio;
 
       // Apply merge effect to nearby bubbles
       ApplyMergeEffect(newPosition, newSize);
@@ -214,7 +221,8 @@ public class Bubble : MonoBehaviour
 
   private void ApplyMergeEffect(Vector2 position, float size)
   {
-    float mergeRadius = size * GameRules.Data.MergeRadiusRatio;
+    BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+    float mergeRadius = size * variantData.MergeRadiusRatio;
 
     // Apply implosion force to nearby bubbles
     Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(position, mergeRadius);
@@ -234,7 +242,7 @@ public class Bubble : MonoBehaviour
           float overlap = Mathf.Max(0, combinedRadius - distance);
           float overlapRatio = overlap / combinedRadius;
 
-          float force = GameRules.Data.MergeForce * overlapRatio;
+          float force = variantData.MergeForce * overlapRatio;
           rb.AddForce(direction * force, ForceMode2D.Impulse);
         }
       }
@@ -288,6 +296,8 @@ public class Bubble : MonoBehaviour
   {
     try
     {
+      BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+
       // Play pop sound immediately
       if (_soundManager != null)
       {
@@ -299,12 +309,12 @@ public class Bubble : MonoBehaviour
       float startTime = Time.time;
 
       // Growth animation
-      if (GameRules.Data.PopDelay > 0)
+      if (variantData.PopDelay > 0)
       {
-        while (Time.time < startTime + GameRules.Data.PopDelay)
+        while (Time.time < startTime + variantData.PopDelay)
         {
-          float progress = (Time.time - startTime) / GameRules.Data.PopDelay;
-          Size = initialSize * Mathf.Lerp(1f, GameRules.Data.PopSizeIncrease, progress);
+          float progress = (Time.time - startTime) / variantData.PopDelay;
+          Size = initialSize * Mathf.Lerp(1f, variantData.PopSizeIncrease, progress);
           UpdateShape();
           yield return null;
         }
@@ -324,7 +334,7 @@ public class Bubble : MonoBehaviour
       }
 
       // Calculate pop effect radius based on bubble size
-      float popRadius = Radius * GameRules.Data.PopRadiusRatio;
+      float popRadius = Radius * variantData.PopRadiusRatio;
 
       // Apply explosion force to nearby bubbles and check for matching neighbors
       Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, popRadius);
@@ -344,7 +354,7 @@ public class Bubble : MonoBehaviour
             float overlapRatio = overlap / combinedRadius;
 
             // Apply pop force
-            float force = GameRules.Data.PopForce * overlapRatio;
+            float force = variantData.PopForce * overlapRatio;
             rb.AddForce(direction * force, ForceMode2D.Impulse);
 
             // Check if we should pop matching neighbors (using actual radii for touch detection)
@@ -352,10 +362,11 @@ public class Bubble : MonoBehaviour
             float actualOverlap = Mathf.Max(0, actualCombinedRadius - distance);
             float actualOverlapRatio = actualOverlap / actualCombinedRadius;
 
-            if (GameRules.Data.PopMatchingNeighbors && targetBubble.Variant == Variant &&
-                actualOverlapRatio >= GameRules.Data.MinOverlapToPop)
+            if (variantData.PopMatchingNeighbors && targetBubble.Variant == Variant &&
+                actualOverlapRatio >= variantData.MinOverlapToPop)
             {
-              targetBubble.PopWithDelay(GameRules.Data.NeighborPopDelay);
+              float randomDelay = Random.Range(variantData.NeighborPopDelay.x, variantData.NeighborPopDelay.y);
+              targetBubble.PopWithDelay(randomDelay);
             }
           }
         }
@@ -394,5 +405,27 @@ public class Bubble : MonoBehaviour
     // Draw core collision radius
     Gizmos.color = new Color(1f, 0f, 0f, 0.3f);  // Semi-transparent red
     Gizmos.DrawWireSphere(transform.position, Radius * CoreSizeRatio);
+  }
+
+  private void FixedUpdate()
+  {
+    // Apply drag force
+    Rigidbody2D rb = GetComponent<Rigidbody2D>();
+    if (rb != null)
+    {
+      BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+
+      // Update gravity scale
+      rb.gravityScale = variantData.GravityFactor;
+
+      // Apply drag force
+      rb.AddForce(-rb.linearVelocity * variantData.DragForce, ForceMode2D.Force);
+
+      // Clamp velocity
+      if (rb.linearVelocity.magnitude > variantData.MaxVelocity)
+      {
+        rb.linearVelocity = rb.linearVelocity.normalized * variantData.MaxVelocity;
+      }
+    }
   }
 }

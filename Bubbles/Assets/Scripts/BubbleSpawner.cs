@@ -49,28 +49,31 @@ public class BubbleSpawner : MonoBehaviour
         Bubble bubbleComponent = bubble.GetComponent<Bubble>();
         if (bubbleComponent != null)
         {
-            bubbleComponent.Size = Random.Range(
-                GameRules.Data.MinBubbleSize,
-                GameRules.Data.MaxBubbleSize
-            );
-            bubbleComponent.CoreSizeRatio = GameRules.Data.CoreSizeRatio;
-            bubbleComponent.Variant = Random.Range(0, GameRules.Data.VariantCount);
-        }
+            int variant = Random.Range(0, GameRules.Data.VariantCount);
+            BubbleVariant variantData = GameRules.BubbleVariantData(variant);
 
-        // Apply random force in random direction
-        Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            float randomForce = Random.Range(
-                GameRules.Data.BounceForce / 2,
-                GameRules.Data.BounceForce
-            );
-            float randomAngle = Random.Range(0f, 360f);
-            Vector2 randomDirection = new Vector2(
-                Mathf.Cos(randomAngle * Mathf.Deg2Rad),
-                Mathf.Sin(randomAngle * Mathf.Deg2Rad)
-            );
-            rb.AddForce(randomDirection * randomForce, ForceMode2D.Impulse);
+            bubbleComponent.Variant = variant;
+            bubbleComponent.Size = Random.Range(variantData.SizeRange.x, variantData.SizeRange.y);
+            bubbleComponent.CoreSizeRatio = variantData.CoreSizeRatio;
+
+            // Set mass based on density and size
+            Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                float density = Random.Range(variantData.DensityRange.x, variantData.DensityRange.y);
+                float area = Mathf.PI * bubbleComponent.Size * bubbleComponent.Size * 0.25f; // πr² = π(d/2)²
+                rb.mass = density * area;
+
+                // Apply initial impulse
+                float impulse = variantData.InitialImpulse;
+                float randomForce = Random.Range(impulse / 2, impulse);
+                float randomAngle = Random.Range(0f, 360f);
+                Vector2 randomDirection = new Vector2(
+                    Mathf.Cos(randomAngle * Mathf.Deg2Rad),
+                    Mathf.Sin(randomAngle * Mathf.Deg2Rad)
+                );
+                rb.AddForce(randomDirection * randomForce, ForceMode2D.Impulse);
+            }
         }
     }
 
