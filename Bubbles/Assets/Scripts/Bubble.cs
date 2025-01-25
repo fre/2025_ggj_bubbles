@@ -36,14 +36,12 @@ public class Bubble : MonoBehaviour
 
   private bool _isHovered = false;
   private float _currentHoverT = 0f;  // Transition value for hover effect
-  private float _baseSize = 1f;  // Store the actual size without hover effect
 
-  public float Radius => Size * 0.5f * (_isHovered ? GameRules.Data.HoverSizeIncrease : 1f);
-  private float Volume => Mathf.PI * _baseSize * _baseSize;  // 2D "volume" is area
+  public float Radius => Size * 0.5f;
+  private float Volume => Mathf.PI * Size * Size;  // 2D "volume" is area
 
   private void Start()
   {
-    _baseSize = Size;
     UpdateShape();
     _activeBubbles.Add(this);
   }
@@ -58,12 +56,6 @@ public class Bubble : MonoBehaviour
     // Update hover transition
     float targetHoverT = _isHovered ? 1f : 0f;
     _currentHoverT = Mathf.MoveTowards(_currentHoverT, targetHoverT, Time.deltaTime * GameRules.Data.HoverTransitionSpeed);
-
-    // Update scale if transitioning
-    if (_currentHoverT != targetHoverT)
-    {
-      UpdateShape();
-    }
   }
 
   public void SetHovered(bool hovered)
@@ -76,9 +68,7 @@ public class Bubble : MonoBehaviour
 
   public void UpdateShape()
   {
-    // Calculate final scale including hover effect
-    float hoverScale = Mathf.Lerp(1f, GameRules.Data.HoverSizeIncrease, _currentHoverT);
-    transform.localScale = Vector3.one * _baseSize * hoverScale;
+    transform.localScale = Vector3.one * Size;
 
     if (_coreCollider != null)
     {

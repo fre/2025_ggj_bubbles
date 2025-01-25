@@ -104,13 +104,17 @@ void CalculateBubbleColor_float(
     // Convert hue to RGB color
     float3 bubbleColor = HsvToRgb(float3(hue, 0.7, 0.6));
 
+    // Calculate outline thickness based on hover state
+    float currentOutlineThickness = lerp(OutlineThickness, HoverOutlineThickness, hoverT);
+    float4 currentOutlineColor = lerp(OutlineColor, HoverOutlineColor, hoverT);
+
     // Calculate outline and interface
-    bool isOutline = (ClosestDist * radius + OutlineThickness) > radius;
+    bool isOutline = (ClosestDist * radius + currentOutlineThickness) > radius;
     float distanceBetweenCenters = length(ClosestBubbleData.xy - SecondClosestBubbleData.xy);
     float actualDistanceAtPixel = ClosestDist * radius + SecondClosestDist * SecondClosestBubbleData.z;
     float thicknessMultiplier = distanceBetweenCenters / actualDistanceAtPixel;
     bool isInterface = SecondClosestDist < 1 && 
-        abs(SecondClosestDist - ClosestDist) * radius < OutlineThickness * thicknessMultiplier;
+        abs(SecondClosestDist - ClosestDist) * radius < currentOutlineThickness * thicknessMultiplier;
     
     // Calculate base alpha from distance with both falloff parameters
     float baseAlpha = GetBubbleAlpha(ClosestDist, CoreOpacity, EdgeOpacity, OpacityFalloff, OpacitySmoothing);
@@ -118,8 +122,8 @@ void CalculateBubbleColor_float(
     // Set color and alpha based on region
     if (isOutline || isInterface)
     {
-        Color = OutlineColor.rgb;
-        Alpha = OutlineColor.a;
+        Color = currentOutlineColor.rgb;
+        Alpha = currentOutlineColor.a;
     }
     else
     {
