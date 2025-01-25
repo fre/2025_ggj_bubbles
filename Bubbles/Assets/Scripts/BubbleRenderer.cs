@@ -4,42 +4,64 @@ using System.Collections.Generic;
 [RequireComponent(typeof(MeshRenderer))]
 public class BubbleRenderer : MonoBehaviour
 {
-  private static readonly int BubbleDataProperty = Shader.PropertyToID("_BubbleData");
-  private static readonly int BubbleCountProperty = Shader.PropertyToID("_BubbleCount");
-  private static readonly int MaxBubbleCountProperty = Shader.PropertyToID("_MaxBubbleCount");
-  private static readonly int OutlineThicknessProperty = Shader.PropertyToID("_OutlineThickness");
-  private static readonly int CoreOpacityProperty = Shader.PropertyToID("_CoreOpacity");
-  private static readonly int EdgeOpacityProperty = Shader.PropertyToID("_EdgeOpacity");
-  private static readonly int OpacityFalloffProperty = Shader.PropertyToID("_OpacityFalloff");
-  private static readonly int OpacitySmoothingProperty = Shader.PropertyToID("_OpacitySmoothing");
-  private static readonly int OutlineColorProperty = Shader.PropertyToID("_OutlineColor");
-  private static readonly int BackgroundColorProperty = Shader.PropertyToID("_BackgroundColor");
+  private static int BubbleDataProperty;
+  private static int BubbleCountProperty;
+  private static int MaxBubbleCountProperty;
+  private static int OutlineThicknessProperty;
+  private static int CoreOpacityProperty;
+  private static int EdgeOpacityProperty;
+  private static int OpacityFalloffProperty;
+  private static int OpacitySmoothingProperty;
+  private static int OutlineColorProperty;
+  private static int BackgroundColorProperty;
+  private static int HoverOutlineColorProperty;
+  private static int HoverOutlineThicknessProperty;
 
   private Material _material;
   private Texture2D _bubbleDataTexture;
+
+  private static int CHANNELS_PER_BUBBLE = 4;
 
   private void Awake()
   {
     _material = GetComponent<MeshRenderer>().material;
 
-    // Create texture for bubble data
-    _bubbleDataTexture = new Texture2D(GameRules.Data.MaxBubbles, 1, TextureFormat.RGBAFloat, false);
+    // Create texture for bubble data (2D texture: X = different data types, Y = bubbles)
+    _bubbleDataTexture = new Texture2D(CHANNELS_PER_BUBBLE, GameRules.Data.MaxBubbles, TextureFormat.RGBAFloat, false);
     _bubbleDataTexture.filterMode = FilterMode.Point;
     _bubbleDataTexture.wrapMode = TextureWrapMode.Clamp;
 
     // Initialize with empty data
-    Color[] initialData = new Color[GameRules.Data.MaxBubbles];
-    for (int i = 0; i < GameRules.Data.MaxBubbles; i++)
+    Color[] initialData = new Color[CHANNELS_PER_BUBBLE * GameRules.Data.MaxBubbles];
+    for (int i = 0; i < initialData.Length; i++)
     {
       initialData[i] = Color.clear;
     }
     _bubbleDataTexture.SetPixels(initialData);
     _bubbleDataTexture.Apply();
 
+    IndexPropertyIds();
+
     // Assign texture and shader properties
     _material.SetTexture(BubbleDataProperty, _bubbleDataTexture);
     _material.SetFloat(MaxBubbleCountProperty, GameRules.Data.MaxBubbles);
     UpdateShaderProperties();
+  }
+
+  private void IndexPropertyIds()
+  {
+    BubbleDataProperty = Shader.PropertyToID("_BubbleData");
+    BubbleCountProperty = Shader.PropertyToID("_BubbleCount");
+    MaxBubbleCountProperty = Shader.PropertyToID("_MaxBubbleCount");
+    OutlineThicknessProperty = Shader.PropertyToID("_OutlineThickness");
+    CoreOpacityProperty = Shader.PropertyToID("_CoreOpacity");
+    EdgeOpacityProperty = Shader.PropertyToID("_EdgeOpacity");
+    OpacityFalloffProperty = Shader.PropertyToID("_OpacityFalloff");
+    OpacitySmoothingProperty = Shader.PropertyToID("_OpacitySmoothing");
+    OutlineColorProperty = Shader.PropertyToID("_OutlineColor");
+    BackgroundColorProperty = Shader.PropertyToID("_BackgroundColor");
+    HoverOutlineColorProperty = Shader.PropertyToID("_HoverOutlineColor");
+    HoverOutlineThicknessProperty = Shader.PropertyToID("_HoverOutlineThickness");
   }
 
   private void UpdateShaderProperties()
@@ -51,6 +73,8 @@ public class BubbleRenderer : MonoBehaviour
     _material.SetFloat(OpacitySmoothingProperty, GameRules.Data.OpacitySmoothing);
     _material.SetColor(OutlineColorProperty, GameRules.Data.OutlineColor);
     _material.SetColor(BackgroundColorProperty, GameRules.Data.BackgroundColor);
+    _material.SetColor(HoverOutlineColorProperty, GameRules.Data.HoverOutlineColor);
+    _material.SetFloat(HoverOutlineThicknessProperty, GameRules.Data.HoverOutlineThickness);
   }
 
   private void LateUpdate()
@@ -58,23 +82,38 @@ public class BubbleRenderer : MonoBehaviour
     // Get active bubbles from static list
     var activeBubbles = Bubble.ActiveBubbles;
     int bubbleCount = Mathf.Min(activeBubbles.Count, GameRules.Data.MaxBubbles);
-    Color[] bubbleData = new Color[GameRules.Data.MaxBubbles];
+    Color[] bubbleData = new Color[CHANNELS_PER_BUBBLE * GameRules.Data.MaxBubbles];
 
     // Update texture data
     for (int i = 0; i < GameRules.Data.MaxBubbles; i++)
     {
       if (i < bubbleCount)
       {
-        Vector3 worldPos = activeBubbles[i].transform.position;
-        float radius = activeBubbles[i].Radius;
-        float hue = activeBubbles[i].Hue;
+        var bubble = activeBubbles[i];
+        Vector3 worldPos = bubble.transform.position;
+        float radius = bubble.Radius;
 
-        // Store raw world coordinates
-        bubbleData[i] = new Color(worldPos.x, worldPos.y, radius, hue);
+        // Calculate texture indices for each column
+        int baseIndex = CHANNELS_PER_BUBBLE * i;
+
+        // Column 0: Position, radius, and bubble index
+        bubbleData[baseIndex] = new Color(worldPos.x, worldPos.y, radius, i);
+
+        // Column 1: Hover state and hue
+        bubbleData[baseIndex + 1] = new Color(bubble.Hue, bubble.HoverT, 0, 0);
+
+        // Column 2 & 3: Reserved for future use
+        bubbleData[baseIndex + 2] = Color.clear;
+        bubbleData[baseIndex + 3] = Color.clear;
       }
       else
       {
-        bubbleData[i] = Color.clear;
+        // Clear all columns for unused bubbles
+        int baseIndex = CHANNELS_PER_BUBBLE * i;
+        bubbleData[baseIndex] = Color.clear;     // Column 0
+        bubbleData[baseIndex + 1] = Color.clear; // Column 1
+        bubbleData[baseIndex + 2] = Color.clear; // Column 2
+        bubbleData[baseIndex + 3] = Color.clear; // Column 3
       }
     }
 

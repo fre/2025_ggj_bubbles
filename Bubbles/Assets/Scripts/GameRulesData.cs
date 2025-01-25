@@ -48,6 +48,12 @@ public class GameRulesData : ScriptableObject
   public Color OutlineColor = new Color(1f, 1f, 1f, 0.8f);  // White with 80% opacity
   public Color BackgroundColor = new Color(0f, 0f, 0f, 0f); // Fully transparent black
 
+  [Header("Hover Effects")]
+  public float HoverSizeIncrease = 1.1f;  // Scale multiplier when hovered
+  public float HoverTransitionSpeed = 0.5f;  // How fast the hover effect transitions
+  public Color HoverOutlineColor = new Color(1f, 1f, 1f, 1f);  // Brighter white for hover
+  public float HoverOutlineThickness = 0.08f;
+
   [Header("Bubble Transparency")]
   public float CoreOpacity = 0.9f;     // Alpha at bubble center
   public float EdgeOpacity = 0.4f;     // Alpha at bubble edge

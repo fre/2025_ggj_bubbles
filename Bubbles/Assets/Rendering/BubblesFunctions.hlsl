@@ -3,8 +3,15 @@
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
+float4 GetBubbleData(UnityTexture2D BubbleData, UnitySamplerState BubbleDataSampler, float bubbleIndex, int column, int MaxBubbleCount)
+{
+    // Convert raw index to normalized UV coordinate
+    float2 uv = float2((float)column / 4, bubbleIndex / MaxBubbleCount);
+    return SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, uv, 0);
+}
+
 void FindClosestBubbles_float(
-    float2 WorldPos,  // Now taking world position directly
+    float2 WorldPos,
     UnityTexture2D BubbleData,
     UnitySamplerState BubbleDataSampler,
     float BubbleCount,
@@ -21,7 +28,9 @@ void FindClosestBubbles_float(
     
     for(int i = 0; i < (int)BubbleCount; i++)
     {
-        float4 bubbleData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, float2((float)i / MaxBubbleCount, 0), 0);
+        // Read from column 0 (position data)
+        float2 uv = float2(0, (float)i / MaxBubbleCount); // Normalize index for UV
+        float4 bubbleData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, uv, 0);
         float2 center = bubbleData.xy;
         float radius = bubbleData.z;
         float d = length(WorldPos - center) / radius;
@@ -48,27 +57,17 @@ void FindClosestBubbles_float(
 
 float GetBubbleAlpha(float distanceFromCenter, float coreOpacity, float edgeOpacity, float falloff, float smoothing)
 {
-    // Basic distance curve (0 at center, 1 at edge)
-    float t = distanceFromCenter;  // Remove saturation to allow overflow
+    // Remap distance to create a smooth transition centered around the falloff point
+    float t = smoothstep(falloff - smoothing * 0.5, falloff + smoothing * 0.5, distanceFromCenter);
     
-    // Apply smoothing as a power curve near center (allows overflow)
-    float smoothPower = lerp(1, 0.5, smoothing);  // Smoothing now affects curve steepness
-    float smoothT = pow(abs(t), smoothPower) * sign(t);
-    
-    // Apply main falloff curve
-    float curveT = pow(abs(smoothT), falloff) * sign(smoothT);
-    
-    // Allow overflow in center while maintaining edge behavior
-    float alpha = lerp(coreOpacity, edgeOpacity, saturate(curveT));
-    
-    // Boost center alpha based on smoothing
-    float centerBoost = 1 + smoothing * 2;  // More smoothing = more center boost
-    alpha *= lerp(centerBoost, 1, saturate(curveT));  // Only boost center
-    
-    return alpha;
+    // Lerp between core and edge opacity using the smoothed transition
+    return lerp(coreOpacity, edgeOpacity, t);
 }
 
 void CalculateBubbleColor_float(
+    UnityTexture2D BubbleData,
+    UnitySamplerState BubbleDataSampler,
+    float MaxBubbleCount,
     float ClosestDist,
     float SecondClosestDist,
     float4 ClosestBubbleData,
@@ -80,21 +79,31 @@ void CalculateBubbleColor_float(
     float EdgeOpacity,
     float OpacityFalloff,
     float OpacitySmoothing,
+    float4 HoverOutlineColor,
+    float HoverOutlineThickness,
     out float3 Color,
     out float Alpha)
 {
     // Initialize with fully transparent background
     Color = BackgroundColor.rgb;
-    Alpha = 0;
+    Alpha = BackgroundColor.a;
     
     // Early out if no bubble
     if (ClosestDist >= 1)
         return;
-        
-    // Convert hue to RGB color
-    float3 bubbleColor = HsvToRgb(float3(ClosestBubbleData.w, 0.7, 0.6));
+
+    // Get raw bubble index from column 0
+    float2 center = ClosestBubbleData.xy;
     float radius = ClosestBubbleData.z;
+    float bubbleIndex = ClosestBubbleData.w;
     
+    float4 bubbleData1 = GetBubbleData(BubbleData, BubbleDataSampler, bubbleIndex, 1, MaxBubbleCount);
+    float hue = bubbleData1.r;
+    float hoverT = bubbleData1.g;
+
+    // Convert hue to RGB color
+    float3 bubbleColor = HsvToRgb(float3(hue, 0.7, 0.6));
+
     // Calculate outline and interface
     bool isOutline = (ClosestDist * radius + OutlineThickness) > radius;
     float distanceBetweenCenters = length(ClosestBubbleData.xy - SecondClosestBubbleData.xy);
@@ -103,16 +112,19 @@ void CalculateBubbleColor_float(
     bool isInterface = SecondClosestDist < 1 && 
         abs(SecondClosestDist - ClosestDist) * radius < OutlineThickness * thicknessMultiplier;
     
-    // Set color based on whether we're in outline/interface
-    Color = (isOutline || isInterface) ? OutlineColor.rgb : bubbleColor;
-    
     // Calculate base alpha from distance with both falloff parameters
-    Alpha = GetBubbleAlpha(ClosestDist, CoreOpacity, EdgeOpacity, OpacityFalloff, OpacitySmoothing);
+    float baseAlpha = GetBubbleAlpha(ClosestDist, CoreOpacity, EdgeOpacity, OpacityFalloff, OpacitySmoothing);
     
-    // Use outline alpha for outlines/interfaces
+    // Set color and alpha based on region
     if (isOutline || isInterface)
     {
+        Color = OutlineColor.rgb;
         Alpha = OutlineColor.a;
+    }
+    else
+    {
+        Color = bubbleColor;
+        Alpha = baseAlpha;
     }
     
     // Ensure we're fully transparent outside the bubble

@@ -25,6 +25,7 @@ public class Bubble : MonoBehaviour
   public float Hue { get; private set; }
   public bool IsPopped { get; private set; }
   private bool _isAnimating = false; // Guard flag for animations
+  public float HoverT => _currentHoverT; // Expose hover transition for renderer
 
   [Header("Colliders")]
   [SerializeField] private CircleCollider2D _bubbleCollider;
@@ -33,11 +34,16 @@ public class Bubble : MonoBehaviour
   [Header("Audio")]
   [SerializeField] private BubbleSoundManager _soundManager;
 
-  public float Radius => Size * 0.5f;
-  private float Volume => Mathf.PI * Size * Size;  // 2D "volume" is area
+  private bool _isHovered = false;
+  private float _currentHoverT = 0f;  // Transition value for hover effect
+  private float _baseSize = 1f;  // Store the actual size without hover effect
+
+  public float Radius => Size * 0.5f * (_isHovered ? GameRules.Data.HoverSizeIncrease : 1f);
+  private float Volume => Mathf.PI * _baseSize * _baseSize;  // 2D "volume" is area
 
   private void Start()
   {
+    _baseSize = Size;
     UpdateShape();
     _activeBubbles.Add(this);
   }
@@ -47,10 +53,32 @@ public class Bubble : MonoBehaviour
     _activeBubbles.Remove(this);
   }
 
+  private void Update()
+  {
+    // Update hover transition
+    float targetHoverT = _isHovered ? 1f : 0f;
+    _currentHoverT = Mathf.MoveTowards(_currentHoverT, targetHoverT, Time.deltaTime * GameRules.Data.HoverTransitionSpeed);
+
+    // Update scale if transitioning
+    if (_currentHoverT != targetHoverT)
+    {
+      UpdateShape();
+    }
+  }
+
+  public void SetHovered(bool hovered)
+  {
+    if (_isHovered != hovered)
+    {
+      _isHovered = hovered;
+    }
+  }
+
   public void UpdateShape()
   {
-    // Update visual scale
-    transform.localScale = Vector3.one * Size;
+    // Calculate final scale including hover effect
+    float hoverScale = Mathf.Lerp(1f, GameRules.Data.HoverSizeIncrease, _currentHoverT);
+    transform.localScale = Vector3.one * _baseSize * hoverScale;
 
     if (_coreCollider != null)
     {

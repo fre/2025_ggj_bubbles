@@ -62,13 +62,11 @@ public class BubbleSoundManager : ScriptableObject
 
   public void PlayPopSound(Vector3 position)
   {
-    Debug.Log("PlayPopSound called");
     PlayRandomSound(position, PopSounds);
   }
 
   public void PlayMergeSound(Vector3 position)
   {
-    Debug.Log("PlayMergeSound called");
     PlayRandomSound(position, MergeSounds);
   }
 }
