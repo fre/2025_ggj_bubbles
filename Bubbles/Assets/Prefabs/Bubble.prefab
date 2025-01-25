@@ -172,6 +172,7 @@ MonoBehaviour:
   _bubbleCollider: {fileID: 8143102461621133006}
   _coreCollider: {fileID: 6346567385533156342}
   _soundManager: {fileID: 11400000, guid: ec863dd3f2f1c39459e72f2d992ab5c5, type: 2}
+  _popParticlePrefab: {fileID: 3524600883348862317, guid: 21e0465fc27495e4db28140f6a91238f, type: 3}
 --- !u!1 &4622263116989249819
 GameObject:
   m_ObjectHideFlags: 0

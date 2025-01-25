@@ -34,6 +34,9 @@ public class Bubble : MonoBehaviour
   [Header("Audio")]
   [SerializeField] private BubbleSoundManager _soundManager;
 
+  [Header("Effects")]
+  [SerializeField] private GameObject _popParticlePrefab;
+
   private bool _isHovered = false;
   private float _currentHoverT = 0f;  // Transition value for hover effect
 
@@ -56,6 +59,12 @@ public class Bubble : MonoBehaviour
     // Update hover transition
     float targetHoverT = _isHovered ? 1f : 0f;
     _currentHoverT = Mathf.MoveTowards(_currentHoverT, targetHoverT, Time.deltaTime * GameRules.Data.HoverTransitionSpeed);
+
+    // Check if bubble has grown too large
+    if (Size >= GameRules.Data.PopAtSize && !Invulnerable && !_isAnimating)
+    {
+      Pop();
+    }
   }
 
   public void SetHovered(bool hovered)
@@ -307,6 +316,19 @@ public class Bubble : MonoBehaviour
           Size = initialSize * Mathf.Lerp(1f, GameRules.Data.PopSizeIncrease, progress);
           UpdateShape();
           yield return null;
+        }
+      }
+
+      // Spawn particle effect
+      if (_popParticlePrefab != null)
+      {
+        GameObject particleObj = Instantiate(_popParticlePrefab, transform.position, Quaternion.identity);
+        particleObj.transform.localScale = Vector3.one * Size;
+
+        BubblePopEffect popEffect = particleObj.GetComponent<BubblePopEffect>();
+        if (popEffect != null)
+        {
+          popEffect.Initialize(this);
         }
       }
 

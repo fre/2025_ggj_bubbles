@@ -31,6 +31,7 @@ public class GameRulesData : ScriptableObject
   public float PopRadiusRatio = 1.5f;
   public float PopDelay = 0.2f;
   public float PopSizeIncrease = 1.5f; // How much the bubble grows before popping
+  public float PopAtSize = 5.0f;       // Bubble will automatically pop when reaching this size
 
   [Header("Merge Effects")]
   public bool MergeMatchingVariants = true;
