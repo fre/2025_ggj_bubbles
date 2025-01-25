@@ -42,6 +42,7 @@ public class TestBubblePattern : MonoBehaviour
     // Assign to shader
     _material.SetTexture("_BubbleData", _bubbleDataTexture);
     _material.SetFloat("_BubbleCount", BubbleCount);
+    _material.SetFloat("_MaxBubbleCount", MaxBubbleCount);
   }
 
   private void GenerateRandomBubbles()

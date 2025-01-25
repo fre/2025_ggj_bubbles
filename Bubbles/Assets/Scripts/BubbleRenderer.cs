@@ -4,8 +4,9 @@ using System.Collections.Generic;
 [RequireComponent(typeof(MeshRenderer))]
 public class BubbleRenderer : MonoBehaviour
 {
-  private static readonly int BubbleDataProperty = Shader.PropertyToID("BubbleData");
-  private static readonly int BubbleCountProperty = Shader.PropertyToID("BubbleCount");
+  private static readonly int BubbleDataProperty = Shader.PropertyToID("_BubbleData");
+  private static readonly int BubbleCountProperty = Shader.PropertyToID("_BubbleCount");
+  private static readonly int MaxBubbleCountProperty = Shader.PropertyToID("_MaxBubbleCount");
 
   private Material _material;
   private Texture2D _bubbleDataTexture;
@@ -33,6 +34,7 @@ public class BubbleRenderer : MonoBehaviour
 
     // Assign texture and world space ranges
     _material.SetTexture(BubbleDataProperty, _bubbleDataTexture);
+    _material.SetFloat(MaxBubbleCountProperty, MaxBubbles);
   }
 
   private void LateUpdate()

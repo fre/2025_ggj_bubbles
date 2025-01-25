@@ -1,6 +1,8 @@
 #ifndef BUBBLES_FUNCTIONS_INCLUDED
 #define BUBBLES_FUNCTIONS_INCLUDED
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+
 void FindClosestBubbles_float(
     float2 WorldPos,  // Now taking world position directly
     UnityTexture2D BubbleData,
@@ -62,20 +64,7 @@ void CalculateBubbleColor_float(
     
     if (ClosestDist < 1)
     {
-        float hue = frac(ClosestBubbleData.w);
-        float3 bubbleColor;
-        
-        if (hue < 0.2)
-            bubbleColor = float3(0.0, 0.4, 0.8);
-        else if (hue < 0.4)
-            bubbleColor = float3(0.2, 0.7, 0.8);
-        else if (hue < 0.6)
-            bubbleColor = float3(1.0, 0.8, 0.2);
-        else if (hue < 0.8)
-            bubbleColor = float3(1.0, 0.5, 0.0);
-        else
-            bubbleColor = float3(0.2, 0.8, 0.6);
-
+        float3 bubbleColor = HsvToRgb(float3(ClosestBubbleData.w, 0.7, 0.6));
         bool isOutline = (ClosestDist * radius + OutlineThickness) > radius;
 
         // Distance between the two bubbles
