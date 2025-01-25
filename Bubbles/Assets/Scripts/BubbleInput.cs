@@ -12,7 +12,8 @@ public class BubbleInput : MonoBehaviour
 
   private void Update()
   {
-    if (Input.GetMouseButtonDown(0))  // Left click
+    // Check for mouse button being held
+    if (Input.GetMouseButton(0))  // Changed from GetMouseButtonDown to GetMouseButton
     {
       Vector2? worldPoint = GetMouseWorldPoint();
       if (worldPoint.HasValue)

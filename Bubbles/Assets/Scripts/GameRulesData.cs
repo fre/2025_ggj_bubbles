@@ -26,6 +26,8 @@ public class GameRulesData : ScriptableObject
 
   [Header("Pop Effects")]
   public bool PopMatchingVariants = false;
+  public bool PopMatchingNeighbors = false;  // Whether to pop neighboring bubbles of the same color
+  public float NeighborPopDelay = 0.1f;     // Delay before popping neighboring bubbles
   public float MinOverlapToPop = 0.4f;
   public float PopForce = 10f;
   public float PopRadiusRatio = 1.5f;

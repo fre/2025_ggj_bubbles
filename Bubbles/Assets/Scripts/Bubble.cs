@@ -12,17 +12,8 @@ public class Bubble : MonoBehaviour
   public float Size = 1f;
   public float CoreSizeRatio = 0.6f;
   public bool Invulnerable = false;
-  private int _variant;
-  public int Variant
-  {
-    get => _variant;
-    set
-    {
-      _variant = value;
-      Hue = (float)value / GameRules.Data.VariantCount;
-    }
-  }
-  public float Hue { get; private set; }
+  public int Variant;
+  public float Hue => (float)Variant / GameRules.Data.VariantCount;
   public bool IsPopped { get; private set; }
   private bool _isAnimating = false; // Guard flag for animations
   public float HoverT => _currentHoverT; // Expose hover transition for renderer
@@ -335,7 +326,7 @@ public class Bubble : MonoBehaviour
       // Calculate pop effect radius based on bubble size
       float popRadius = Radius * GameRules.Data.PopRadiusRatio;
 
-      // Apply explosion force to nearby bubbles
+      // Apply explosion force to nearby bubbles and check for matching neighbors
       Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, popRadius);
       foreach (Collider2D collider in nearbyColliders)
       {
@@ -352,8 +343,20 @@ public class Bubble : MonoBehaviour
             float overlap = Mathf.Max(0, combinedRadius - distance);
             float overlapRatio = overlap / combinedRadius;
 
+            // Apply pop force
             float force = GameRules.Data.PopForce * overlapRatio;
             rb.AddForce(direction * force, ForceMode2D.Impulse);
+
+            // Check if we should pop matching neighbors (using actual radii for touch detection)
+            float actualCombinedRadius = Radius + targetBubble.Radius;
+            float actualOverlap = Mathf.Max(0, actualCombinedRadius - distance);
+            float actualOverlapRatio = actualOverlap / actualCombinedRadius;
+
+            if (GameRules.Data.PopMatchingNeighbors && targetBubble.Variant == Variant &&
+                actualOverlapRatio >= GameRules.Data.MinOverlapToPop)
+            {
+              targetBubble.PopWithDelay(GameRules.Data.NeighborPopDelay);
+            }
           }
         }
       }
@@ -364,6 +367,21 @@ public class Bubble : MonoBehaviour
     finally
     {
       _isAnimating = false;
+    }
+  }
+
+  public void PopWithDelay(float delay)
+  {
+    if (IsPopped || Invulnerable || _isAnimating) return;
+    StartCoroutine(DelayedPop(delay));
+  }
+
+  private IEnumerator DelayedPop(float delay)
+  {
+    yield return new WaitForSeconds(delay);
+    if (!IsPopped && !Invulnerable)
+    {
+      Pop();
     }
   }
 
