@@ -18,10 +18,15 @@ public class GameRulesData : ScriptableObject
   public int InitialSpawnCount = 5;
 
   [Header("Rendering")]
-  public float OutlineThickness = 0.05f;
-  public Color OutlineColor = new Color(1f, 1f, 1f, 0.8f);
-  public Color BackgroundColor = new Color(0f, 0f, 0f, 0f);
-  public float OutlineSmoothRadius = 1.0f;
+  public float OutlineThickness = 0.1f;
+  public float CoreOpacity = 0.5f;
+  public float EdgeOpacity = 0.5f;
+  public float OpacityFalloff = 0.5f;
+  public float OpacitySmoothing = 0.5f;
+  public float OutlineSmoothRadius = 0.5f;
+  public float SmallRadiusPreservationFactor = 0.5f;
+  public Color OutlineColor = Color.white;
+  public Color BackgroundColor = Color.black;
   public float WaveAmplitude = 0.02f;
   public float WaveCount = 8f;
   public float WaveRotationSpeed = 1f;
@@ -30,12 +35,6 @@ public class GameRulesData : ScriptableObject
   public float HoverTransitionSpeed = 0.5f;
   public Color HoverOutlineColor = new Color(1f, 1f, 1f, 1f);
   public float HoverOutlineThickness = 0.08f;
-
-  [Header("Bubble Transparency")]
-  public float CoreOpacity = 0.9f;
-  public float EdgeOpacity = 0.4f;
-  public float OpacityFalloff = 2.0f;
-  public float OpacitySmoothing = 0.5f;
 
   public BubbleVariant GetVariantData(int variant)
   {

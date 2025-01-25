@@ -17,6 +17,7 @@ public class BubbleRenderer : MonoBehaviour
   private static int HoverOutlineColorProperty;
   private static int HoverOutlineThicknessProperty;
   private static int OutlineSmoothRadiusProperty;
+  private static int SmallRadiusPreservationFactorProperty;
 
   private Material _material;
   private Texture2D _bubbleDataTexture;
@@ -64,6 +65,7 @@ public class BubbleRenderer : MonoBehaviour
     HoverOutlineColorProperty = Shader.PropertyToID("_HoverOutlineColor");
     HoverOutlineThicknessProperty = Shader.PropertyToID("_HoverOutlineThickness");
     OutlineSmoothRadiusProperty = Shader.PropertyToID("_OutlineSmoothRadius");
+    SmallRadiusPreservationFactorProperty = Shader.PropertyToID("_SmallRadiusPreservationFactor");
   }
 
   private void UpdateShaderProperties()
@@ -78,6 +80,7 @@ public class BubbleRenderer : MonoBehaviour
     _material.SetColor(HoverOutlineColorProperty, GameRules.Data.HoverOutlineColor);
     _material.SetFloat(HoverOutlineThicknessProperty, GameRules.Data.HoverOutlineThickness);
     _material.SetFloat(OutlineSmoothRadiusProperty, GameRules.Data.OutlineSmoothRadius);
+    _material.SetFloat(SmallRadiusPreservationFactorProperty, GameRules.Data.SmallRadiusPreservationFactor);
   }
 
   private void LateUpdate()

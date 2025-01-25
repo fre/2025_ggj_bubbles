@@ -251,7 +251,10 @@ public class Bubble : MonoBehaviour
 
   public float DistanceToPoint(Vector2 point)
   {
-    return Vector2.Distance(point, (Vector2)transform.position) / Radius;
+    float rawDistance = Vector2.Distance(point, (Vector2)transform.position);
+    float adjustedRadius = Radius; // We don't have wave deformation in the C# version
+    float radiusPreservation = Mathf.Lerp(1f, 1f / Mathf.Max(adjustedRadius, 0.001f), GameRules.Data.SmallRadiusPreservationFactor);
+    return rawDistance / (adjustedRadius * radiusPreservation);
   }
 
   public static Bubble FindClosestBubbleTo(Vector2 point)

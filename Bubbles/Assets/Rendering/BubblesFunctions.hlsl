@@ -16,6 +16,7 @@ void FindClosestBubbles_float(
     UnitySamplerState BubbleDataSampler,
     float BubbleCount,
     float MaxBubbleCount,
+    float SmallRadiusPreservationFactor,
     out float ClosestDist,
     out float SecondClosestDist,
     out float4 ClosestBubbleData,
@@ -49,7 +50,10 @@ void FindClosestBubbles_float(
         float waveOffset = sin(wavePhase * waveCount) * waveAmplitude;
         float adjustedRadius = radius * (1 + waveOffset);
         
-        float d = length(toPixel) / adjustedRadius;
+        // Calculate distance with radius preservation
+        float rawDist = length(toPixel);
+        float radiusPreservation = lerp(1, 1 / max(adjustedRadius, 0.001), SmallRadiusPreservationFactor);
+        float d = rawDist / (adjustedRadius * radiusPreservation);
         
         if (d < 1 && d < minDist)
         {
@@ -98,6 +102,7 @@ void CalculateBubbleColor_float(
     float4 HoverOutlineColor,
     float HoverOutlineThickness,
     float OutlineSmoothRadius,
+    float SmallRadiusPreservationFactor,
     out float3 Color,
     out float Alpha)
 {
@@ -125,16 +130,23 @@ void CalculateBubbleColor_float(
     float currentOutlineThickness = lerp(OutlineThickness, HoverOutlineThickness, hoverT);
     float4 currentOutlineColor = lerp(OutlineColor, HoverOutlineColor, hoverT);
     
-    // Calculate smooth outline transition
-    float outlineDistance = (ClosestDist * radius + currentOutlineThickness) - radius;
+    // Calculate radius preservation factor (same as in FindClosestBubbles_float)
+    float radiusPreservation = lerp(1, 1 / max(radius, 0.001), SmallRadiusPreservationFactor);
+    
+    // Calculate smooth outline transition - compensate for radius preservation
+    float outlineDistance = (ClosestDist * radius + currentOutlineThickness / radiusPreservation) - radius;
     float outlineFactor = smoothstep(-OutlineSmoothRadius, OutlineSmoothRadius, outlineDistance);
     
     // Calculate smooth interface transition
     float distanceBetweenCenters = length(ClosestBubbleData.xy - SecondClosestBubbleData.xy);
     float actualDistanceAtPixel = ClosestDist * radius + SecondClosestDist * SecondClosestBubbleData.z;
-    float thicknessMultiplier = distanceBetweenCenters / actualDistanceAtPixel;
+    float thicknessMultiplier = pow(distanceBetweenCenters / actualDistanceAtPixel, 0.5);
+    thicknessMultiplier = thicknessMultiplier * 0.6; // Thinner interface
     
-    float interfaceDistance = abs(SecondClosestDist - ClosestDist) * radius - (currentOutlineThickness * thicknessMultiplier);
+    // Compensate interface thickness based on average radius preservation
+    float avgRadiusPreservation = lerp(1, 1 / max((radius + SecondClosestBubbleData.z) * 0.5, 0.001), SmallRadiusPreservationFactor);
+    avgRadiusPreservation = pow(avgRadiusPreservation, 1) * 1;
+    float interfaceDistance = abs(SecondClosestDist - ClosestDist) * radius - (currentOutlineThickness * thicknessMultiplier / avgRadiusPreservation);
     float interfaceFactor = SecondClosestDist < 1 ? 
         smoothstep(OutlineSmoothRadius, -OutlineSmoothRadius, interfaceDistance) : 0;
     
