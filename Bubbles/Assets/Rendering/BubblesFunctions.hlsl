@@ -33,19 +33,35 @@ void FindClosestBubbles_float(
         float4 bubbleData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, uv, 0);
         float2 center = bubbleData.xy;
         float radius = bubbleData.z;
-        float d = length(WorldPos - center) / radius;
+        
+        // Get wave data from column 3
+        float4 waveData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, float2(3.0/4.0, (float)i / MaxBubbleCount), 0);
+        float waveAmplitude = waveData.r;
+        float waveCount = waveData.g;
+        float waveRotation = waveData.b;
+        
+        // Calculate angle to current pixel
+        float2 toPixel = WorldPos - center;
+        float angle = atan2(toPixel.y, toPixel.x);
+        
+        // Calculate wave offset
+        float wavePhase = angle + waveRotation;
+        float waveOffset = sin(wavePhase * waveCount) * waveAmplitude;
+        float adjustedRadius = radius * (1 + waveOffset);
+        
+        float d = length(toPixel) / adjustedRadius;
         
         if (d < 1 && d < minDist)
         {
             secondMinDist = minDist;
             secondData = closestData;
             minDist = d;
-            closestData = bubbleData;
+            closestData = float4(center, adjustedRadius, bubbleData.w); // Store adjusted radius
         }
         else if (d > minDist && d < 1 && d < secondMinDist)
         {
             secondMinDist = d;
-            secondData = bubbleData;
+            secondData = float4(center, adjustedRadius, bubbleData.w); // Store adjusted radius
         }
     }
     
@@ -81,6 +97,7 @@ void CalculateBubbleColor_float(
     float OpacitySmoothing,
     float4 HoverOutlineColor,
     float HoverOutlineThickness,
+    float OutlineSmoothRadius,
     out float3 Color,
     out float Alpha)
 {
@@ -94,7 +111,7 @@ void CalculateBubbleColor_float(
 
     // Get raw bubble index from column 0
     float2 center = ClosestBubbleData.xy;
-    float radius = ClosestBubbleData.z;
+    float radius = ClosestBubbleData.z; // This is now the pre-adjusted radius
     float bubbleIndex = ClosestBubbleData.w;
     
     float4 bubbleData1 = GetBubbleData(BubbleData, BubbleDataSampler, bubbleIndex, 1, MaxBubbleCount);
@@ -104,32 +121,32 @@ void CalculateBubbleColor_float(
     // Convert hue to RGB color
     float3 bubbleColor = HsvToRgb(float3(hue, 0.7, 0.6));
 
-    // Calculate outline thickness based on hover state
+    // Calculate outline thickness and color based on hover state
     float currentOutlineThickness = lerp(OutlineThickness, HoverOutlineThickness, hoverT);
     float4 currentOutlineColor = lerp(OutlineColor, HoverOutlineColor, hoverT);
-
-    // Calculate outline and interface
-    bool isOutline = (ClosestDist * radius + currentOutlineThickness) > radius;
+    
+    // Calculate smooth outline transition
+    float outlineDistance = (ClosestDist * radius + currentOutlineThickness) - radius;
+    float outlineFactor = smoothstep(-OutlineSmoothRadius, OutlineSmoothRadius, outlineDistance);
+    
+    // Calculate smooth interface transition
     float distanceBetweenCenters = length(ClosestBubbleData.xy - SecondClosestBubbleData.xy);
     float actualDistanceAtPixel = ClosestDist * radius + SecondClosestDist * SecondClosestBubbleData.z;
     float thicknessMultiplier = distanceBetweenCenters / actualDistanceAtPixel;
-    bool isInterface = SecondClosestDist < 1 && 
-        abs(SecondClosestDist - ClosestDist) * radius < currentOutlineThickness * thicknessMultiplier;
+    
+    float interfaceDistance = abs(SecondClosestDist - ClosestDist) * radius - (currentOutlineThickness * thicknessMultiplier);
+    float interfaceFactor = SecondClosestDist < 1 ? 
+        smoothstep(OutlineSmoothRadius, -OutlineSmoothRadius, interfaceDistance) : 0;
+    
+    // Combine outline and interface factors
+    float outlineStrength = max(outlineFactor, interfaceFactor);
     
     // Calculate base alpha from distance with both falloff parameters
     float baseAlpha = GetBubbleAlpha(ClosestDist, CoreOpacity, EdgeOpacity, OpacityFalloff, OpacitySmoothing);
     
-    // Set color and alpha based on region
-    if (isOutline || isInterface)
-    {
-        Color = currentOutlineColor.rgb;
-        Alpha = currentOutlineColor.a;
-    }
-    else
-    {
-        Color = bubbleColor;
-        Alpha = baseAlpha;
-    }
+    // Blend between bubble color and outline color
+    Color = lerp(bubbleColor, currentOutlineColor.rgb, outlineStrength);
+    Alpha = lerp(baseAlpha, currentOutlineColor.a, outlineStrength);
     
     // Ensure we're fully transparent outside the bubble
     Alpha *= (ClosestDist < 1);

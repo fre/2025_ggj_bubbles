@@ -41,6 +41,9 @@
         },
         {
             "m_Id": "cfb55908c747435fb39a6231c75a875e"
+        },
+        {
+            "m_Id": "a1d81ce12a5547b98c84db6cdafbecbc"
         }
     ],
     "m_Keywords": [],
@@ -113,6 +116,9 @@
         },
         {
             "m_Id": "0d5cb7c9ea3d483cb3b9b59b250c2f9f"
+        },
+        {
+            "m_Id": "ea4d8bb393fd4f44808140ec00bf1f14"
         }
     ],
     "m_GroupDatas": [],
@@ -424,6 +430,20 @@
                     "m_Id": "9d2ef7ca53cc4de2a720ee13b26b8dce"
                 },
                 "m_SlotId": 15
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "ea4d8bb393fd4f44808140ec00bf1f14"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "9d2ef7ca53cc4de2a720ee13b26b8dce"
+                },
+                "m_SlotId": 18
             }
         },
         {
@@ -784,6 +804,21 @@
         "x": 0.0,
         "y": 1.0
     }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "293088fb3edb427ab01c14da9144fdae",
+    "m_Id": 0,
+    "m_DisplayName": "OutlineSmoothRadius",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
 }
 
 {
@@ -1172,6 +1207,9 @@
         },
         {
             "m_Id": "68568c78436142b08e15444422fea3dc"
+        },
+        {
+            "m_Id": "a1d81ce12a5547b98c84db6cdafbecbc"
         }
     ]
 }
@@ -1718,12 +1756,6 @@
     },
     "m_Slots": [
         {
-            "m_Id": "77b60dd5729c4af1b01e511b24518bfc"
-        },
-        {
-            "m_Id": "a831d25eca5b4ce6a5148dadf4b61d8c"
-        },
-        {
             "m_Id": "b53d21b371c94edb8ac7dcb81a8783f7"
         },
         {
@@ -1770,6 +1802,15 @@
         },
         {
             "m_Id": "336ed80238564299869af1d409a830af"
+        },
+        {
+            "m_Id": "f2d8dd2f783a4e72971d8faaf158731c"
+        },
+        {
+            "m_Id": "77b60dd5729c4af1b01e511b24518bfc"
+        },
+        {
+            "m_Id": "a831d25eca5b4ce6a5148dadf4b61d8c"
         }
     ],
     "synonyms": [
@@ -1906,6 +1947,34 @@
     },
     "m_Property": {
         "m_Id": "3ad52e817db9409c94489b3c278fcfd6"
+    }
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
+    "m_ObjectId": "a1d81ce12a5547b98c84db6cdafbecbc",
+    "m_Guid": {
+        "m_GuidSerialized": "89ba8de6-fa47-4dfe-a409-b21579946f84"
+    },
+    "m_Name": "OutlineSmoothRadius",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "OutlineSmoothRadius",
+    "m_DefaultReferenceName": "_OutlineSmoothRadius",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": 0.0,
+    "m_FloatType": 0,
+    "m_RangeValues": {
+        "x": 0.0,
+        "y": 1.0
     }
 }
 
@@ -2488,6 +2557,42 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "ea4d8bb393fd4f44808140ec00bf1f14",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -698.0,
+            "y": 604.0000610351563,
+            "width": 186.99996948242188,
+            "height": 34.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "293088fb3edb427ab01c14da9144fdae"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "a1d81ce12a5547b98c84db6cdafbecbc"
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Internal.Texture2DShaderProperty",
     "m_ObjectId": "ed7a7c764bb84ab1b7216cd595501be1",
     "m_Guid": {
@@ -2514,6 +2619,21 @@
     "useTilingAndOffset": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "f2d8dd2f783a4e72971d8faaf158731c",
+    "m_Id": 18,
+    "m_DisplayName": "OutlineSmoothRadius",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "OutlineSmoothRadius",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
 }
 
 {

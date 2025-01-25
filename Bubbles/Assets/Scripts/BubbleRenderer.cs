@@ -16,6 +16,7 @@ public class BubbleRenderer : MonoBehaviour
   private static int BackgroundColorProperty;
   private static int HoverOutlineColorProperty;
   private static int HoverOutlineThicknessProperty;
+  private static int OutlineSmoothRadiusProperty;
 
   private Material _material;
   private Texture2D _bubbleDataTexture;
@@ -62,6 +63,7 @@ public class BubbleRenderer : MonoBehaviour
     BackgroundColorProperty = Shader.PropertyToID("_BackgroundColor");
     HoverOutlineColorProperty = Shader.PropertyToID("_HoverOutlineColor");
     HoverOutlineThicknessProperty = Shader.PropertyToID("_HoverOutlineThickness");
+    OutlineSmoothRadiusProperty = Shader.PropertyToID("_OutlineSmoothRadius");
   }
 
   private void UpdateShaderProperties()
@@ -75,6 +77,7 @@ public class BubbleRenderer : MonoBehaviour
     _material.SetColor(BackgroundColorProperty, GameRules.Data.BackgroundColor);
     _material.SetColor(HoverOutlineColorProperty, GameRules.Data.HoverOutlineColor);
     _material.SetFloat(HoverOutlineThicknessProperty, GameRules.Data.HoverOutlineThickness);
+    _material.SetFloat(OutlineSmoothRadiusProperty, GameRules.Data.OutlineSmoothRadius);
   }
 
   private void LateUpdate()
@@ -99,12 +102,20 @@ public class BubbleRenderer : MonoBehaviour
         // Column 0: Position, radius, and bubble index
         bubbleData[baseIndex] = new Color(worldPos.x, worldPos.y, radius, i);
 
-        // Column 1: Hover state and hue
+        // Column 1: Hover state and hue only
         bubbleData[baseIndex + 1] = new Color(bubble.Hue, bubble.HoverT, 0, 0);
 
-        // Column 2 & 3: Reserved for future use
+        // Column 2: Reserved for future use
         bubbleData[baseIndex + 2] = Color.clear;
-        bubbleData[baseIndex + 3] = Color.clear;
+
+        // Column 3: Wave parameters (amplitude, count, rotation)
+        float waveRotation = (Time.time * GameRules.Data.WaveRotationSpeed * 2 * Mathf.PI) % (2 * Mathf.PI);
+        bubbleData[baseIndex + 3] = new Color(
+            GameRules.Data.WaveAmplitude,
+            GameRules.Data.WaveCount,
+            waveRotation,
+            0  // Reserved
+        );
       }
       else
       {

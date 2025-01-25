@@ -291,7 +291,6 @@ public class Bubble : MonoBehaviour
       // Play pop sound immediately
       if (_soundManager != null)
       {
-        Debug.Log("Attempting to play pop sound");
         _soundManager.PlayPopSound(transform.position);
       }
 

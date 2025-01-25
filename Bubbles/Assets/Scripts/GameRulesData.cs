@@ -41,12 +41,13 @@ public class GameRulesData : ScriptableObject
   public float MergeSizeShrink = 0.7f; // How much the bubbles shrink before merging
 
   [Header("Rendering")]
-  public float WobbleSpeed = 2f;
-  public float WobbleAmount = 0.1f;
-  public float ColorIntensity = 1f;
   public float OutlineThickness = 0.05f;
   public Color OutlineColor = new Color(1f, 1f, 1f, 0.8f);  // White with 80% opacity
   public Color BackgroundColor = new Color(0f, 0f, 0f, 0f); // Fully transparent black
+  public float OutlineSmoothRadius = 1.0f;  // Controls the smoothness of outline transitions
+  public float WaveAmplitude = 0.02f;       // Max deviation from radius (as fraction of radius)
+  public float WaveCount = 8f;              // Number of complete waves around the bubble
+  public float WaveRotationSpeed = 1f;      // Rotations per second
 
   [Header("Hover Effects")]
   public float HoverTransitionSpeed = 0.5f;  // How fast the hover effect transitions
