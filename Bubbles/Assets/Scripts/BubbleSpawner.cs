@@ -4,24 +4,13 @@ public class BubbleSpawner : MonoBehaviour
 {
     [Header("Spawn Settings")]
     [SerializeField] private GameObject BubblePrefab;
-    [SerializeField] private float SpawnRate = 1f;
-    [SerializeField] private int InitialSpawnCount = 5;
-
-    [Header("Spawn Area")]
-    [SerializeField] private Vector2 SpawnAreaSize = new Vector2(10f, 10f);
-
-    [Header("Bubble Settings")]
-    [SerializeField] private float MinRadius = 0.4f;
-    [SerializeField] private float MaxRadius = 1.5f;
-    [SerializeField] private float MinForce = 2f;
-    [SerializeField] private float MaxForce = 5f;
 
     private float _nextSpawnTime;
 
     private void Start()
     {
         // Spawn initial batch of bubbles
-        for (int i = 0; i < InitialSpawnCount; i++)
+        for (int i = 0; i < GameRules.Data.InitialSpawnCount; i++)
         {
             SpawnBubble();
         }
@@ -30,19 +19,25 @@ public class BubbleSpawner : MonoBehaviour
     private void Update()
     {
         // Check if it's time to spawn a new bubble
-        if (Time.time >= _nextSpawnTime && SpawnRate > 0)
+        if (Time.time >= _nextSpawnTime && GameRules.Data.SpawnInterval > 0)
         {
             SpawnBubble();
-            _nextSpawnTime = Time.time + 1 / SpawnRate;
+            _nextSpawnTime = Time.time + GameRules.Data.SpawnInterval;
         }
     }
 
     private void SpawnBubble()
     {
+        if (Bubble.ActiveBubbles.Count >= GameRules.Data.MaxBubbles)
+        {
+            // Debug.LogWarning("Max bubbles reached");
+            return;
+        }
+
         // Calculate random position within spawn area
         Vector3 randomPosition = transform.position + new Vector3(
-            Random.Range(-SpawnAreaSize.x / 2, SpawnAreaSize.x / 2),
-            Random.Range(-SpawnAreaSize.y / 2, SpawnAreaSize.y / 2),
+            Random.Range(-GameRules.Data.WorldSize.x / 2, GameRules.Data.WorldSize.x / 2),
+            Random.Range(-GameRules.Data.WorldSize.y / 2, GameRules.Data.WorldSize.y / 2),
             0f
         );
 
@@ -53,7 +48,11 @@ public class BubbleSpawner : MonoBehaviour
         Bubble bubbleComponent = bubble.GetComponent<Bubble>();
         if (bubbleComponent != null)
         {
-            bubbleComponent.BubbleRadius = Random.Range(MinRadius, MaxRadius);
+            bubbleComponent.Size = Random.Range(
+                GameRules.Data.MinBubbleSize,
+                GameRules.Data.MaxBubbleSize
+            );
+            bubbleComponent.CoreSizeRatio = GameRules.Data.CoreSizeRatio;
             bubbleComponent.Hue = Random.Range(0f, 1f);
         }
 
@@ -61,7 +60,10 @@ public class BubbleSpawner : MonoBehaviour
         Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            float randomForce = Random.Range(MinForce, MaxForce);
+            float randomForce = Random.Range(
+                GameRules.Data.BounceForce / 2,
+                GameRules.Data.BounceForce
+            );
             float randomAngle = Random.Range(0f, 360f);
             Vector2 randomDirection = new Vector2(
                 Mathf.Cos(randomAngle * Mathf.Deg2Rad),
@@ -75,6 +77,6 @@ public class BubbleSpawner : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireCube(transform.position, new Vector3(SpawnAreaSize.x, SpawnAreaSize.y, 0f));
+        Gizmos.DrawWireCube(transform.position, new Vector3(GameRules.Data.WorldSize.x, GameRules.Data.WorldSize.y, 0f));
     }
 }

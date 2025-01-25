@@ -149,13 +149,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BubblePrefab: {fileID: 1048164319020037151, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
-  SpawnRate: 0
-  InitialSpawnCount: 50
-  SpawnAreaSize: {x: 10, y: 6}
-  MinRadius: 0.4
-  MaxRadius: 1.5
-  MinForce: 2
-  MaxForce: 5
 --- !u!4 &144871363
 Transform:
   m_ObjectHideFlags: 0
@@ -933,7 +926,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4bf1c7a1b554bd4f8497eac4225d75e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxBubbles: 200
 --- !u!23 &1491154975
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1200,6 +1192,14 @@ PrefabInstance:
     - target: {fileID: 7364652562875353811, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
       propertyPath: m_Mass
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8143102461621133006, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8143102461621133006, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

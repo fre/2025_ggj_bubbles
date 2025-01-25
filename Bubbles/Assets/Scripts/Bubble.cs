@@ -1,33 +1,44 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class Bubble : MonoBehaviour
 {
+  // Static bubble tracking
+  private static readonly List<Bubble> _activeBubbles = new List<Bubble>();
+  public static IReadOnlyList<Bubble> ActiveBubbles => _activeBubbles;
+
   [Header("Bubble Properties")]
-  public float BubbleRadius = 1f;  // Visual and repulsion radius
+  public float Size = 1f;
+  public float CoreSizeRatio = 0.6f;
   public float Hue = 0f;
   public bool IsPopped { get; private set; }
 
-  [Header("Collision Settings")]
-  [SerializeField] private float _coreRadiusMultiplier = 0.6f;  // Multiplier of the standard 0.5 collider
-  [SerializeField] private float _repulsionForce = 5f;
+  [Header("Colliders")]
+  [SerializeField] private CircleCollider2D _bubbleCollider;
+  [SerializeField] private CircleCollider2D _coreCollider;
 
-  [Header("Pop Settings")]
-  [SerializeField] private float _popForce = 10f;
-  [SerializeField] private float _popRadius = 3f;
+  public float Radius => Size * 0.5f;
 
-  private CircleCollider2D _coreCollider;
-  private const float BASE_COLLIDER_RADIUS = 0.5f;  // Unity's default circle collider radius
-
-  private void Awake()
+  private void Start()
   {
-    _coreCollider = GetComponent<CircleCollider2D>();
+    UpdateShape();
+    _activeBubbles.Add(this);
+  }
+
+  private void OnDestroy()
+  {
+    _activeBubbles.Remove(this);
+  }
+
+  public void UpdateShape()
+  {
+    // Update visual scale
+    transform.localScale = Vector3.one * Size;
+
     if (_coreCollider != null)
     {
-      _coreCollider.radius = BASE_COLLIDER_RADIUS * _coreRadiusMultiplier;
+      _coreCollider.radius = CoreSizeRatio * 0.5f;
     }
-
-    // Set the visual scale based on bubble radius
-    transform.localScale = Vector3.one * (BubbleRadius * 2f);  // Diameter = 2 * radius
   }
 
   private void OnTriggerStay2D(Collider2D other)
@@ -42,14 +53,14 @@ public class Bubble : MonoBehaviour
       float distance = Vector2.Distance(transform.position, other.transform.position);
 
       // Calculate combined radii
-      float combinedRadii = BubbleRadius + otherBubble.BubbleRadius;
+      float combinedRadii = Radius + otherBubble.Radius;
 
       // Only repel if penetrating
       if (distance < combinedRadii)
       {
         // Force based on penetration depth
         float penetrationDepth = combinedRadii - distance;
-        float forceMagnitude = _repulsionForce * (penetrationDepth / combinedRadii);
+        float forceMagnitude = GameRules.Data.RepulsionForce * (penetrationDepth / combinedRadii);
 
         Vector2 force = direction * forceMagnitude;
 
@@ -77,7 +88,7 @@ public class Bubble : MonoBehaviour
         float distanceToCenter = Vector2.Distance(new Vector2(hitPoint.x, hitPoint.y), (Vector2)transform.position);
 
         // Use the outer bubble radius
-        if (distanceToCenter <= BubbleRadius)
+        if (distanceToCenter <= Radius)
         {
           Pop();
         }
@@ -90,7 +101,7 @@ public class Bubble : MonoBehaviour
     IsPopped = true;
 
     // Apply explosion force to nearby bubbles
-    Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, _popRadius);
+    Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(transform.position, GameRules.Data.PopRadius);
     foreach (Collider2D collider in nearbyColliders)
     {
       if (collider.gameObject != gameObject && collider.CompareTag("Bubble"))
@@ -100,7 +111,7 @@ public class Bubble : MonoBehaviour
         {
           Vector2 direction = (collider.transform.position - transform.position).normalized;
           float distance = Vector2.Distance(transform.position, collider.transform.position);
-          float force = Mathf.Lerp(_popForce, 0f, distance / _popRadius);
+          float force = Mathf.Lerp(GameRules.Data.PopForce, 0f, distance / GameRules.Data.PopRadius);
           rb.AddForce(direction * force, ForceMode2D.Impulse);
         }
       }
@@ -116,10 +127,10 @@ public class Bubble : MonoBehaviour
   {
     // Draw outer repulsion radius
     Gizmos.color = new Color(1f, 1f, 0f, 0.3f);  // Semi-transparent yellow
-    Gizmos.DrawWireSphere(transform.position, BubbleRadius);
+    Gizmos.DrawWireSphere(transform.position, Radius);
 
     // Draw core collision radius
     Gizmos.color = new Color(1f, 0f, 0f, 0.3f);  // Semi-transparent red
-    Gizmos.DrawWireSphere(transform.position, BASE_COLLIDER_RADIUS * _coreRadiusMultiplier);
+    Gizmos.DrawWireSphere(transform.position, Radius * CoreSizeRatio);
   }
 }
