@@ -21,6 +21,14 @@ float4 GetBubbleData(UnityTexture2D BubbleData, UnitySamplerState BubbleDataSamp
     return SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, uv, 0);
 }
 
+// Helper function to shape the wave
+float ShapeWave(float wave, float sharpness)
+{
+    // For sharpness < 1, make waves flatter
+    // For sharpness > 1, make waves spikier
+    return sign(wave) * pow(abs(wave), 1.0 / max(sharpness, 0.01));
+}
+
 void FindClosestBubbles_float(
     float2 WorldPos,
     UnityTexture2D BubbleData,
@@ -56,14 +64,17 @@ void FindClosestBubbles_float(
         float waveAmplitude = waveData.r;
         float waveCount = waveData.g;
         float waveRotation = waveData.b;
+        float waveSharpness = waveData.a;
         
         // Calculate angle to current pixel
         float2 toPixel = WorldPos - center;
         float angle = atan2(toPixel.y, toPixel.x);
         
-        // Calculate wave offset
+        // Calculate wave offset with shaping
         float wavePhase = angle + waveRotation;
-        float waveOffset = sin(wavePhase * waveCount) * waveAmplitude;
+        float rawWave = sin(wavePhase * waveCount);
+        float shapedWave = ShapeWave(rawWave, waveSharpness);
+        float waveOffset = shapedWave * waveAmplitude;
         float adjustedRadius = radius * (1 + waveOffset);
         
         // Calculate distance with radius preservation

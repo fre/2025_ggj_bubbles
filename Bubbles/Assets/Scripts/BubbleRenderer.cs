@@ -188,12 +188,12 @@ public class BubbleRenderer : MonoBehaviour
         bubbleData[baseIndex + 2] = new Color(bubble.Hue, variantData.ColorSaturation, variantData.ColorValue, variantData.Opacity);
 
         // Column 3: Wave parameters (amplitude, count, rotation)
-        float waveRotation = (Time.time * GameRules.Data.WaveRotationSpeed * 2 * Mathf.PI) % (2 * Mathf.PI);
+        float waveRotation = (Time.time * variantData.WaveRotationSpeed * 2 * Mathf.PI) % (2 * Mathf.PI);
         bubbleData[baseIndex + 3] = new Color(
-            GameRules.Data.WaveAmplitude,
-            GameRules.Data.WaveCount,
+            variantData.WaveAmplitude,
+            variantData.WaveCount,
             waveRotation,
-            0  // Reserved
+            variantData.WaveSharpness  // Use reserved channel for wave sharpness
         );
       }
       else

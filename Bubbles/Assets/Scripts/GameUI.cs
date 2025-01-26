@@ -99,10 +99,12 @@ public class GameUI : MonoBehaviour
   {
     bool isPoppedCondition = GameRules.Data.WinCondition == WinConditionType.BubblesPopped;
     bool isTimeSuccess = GameRules.Data.SuccessMeasure == SuccessMeasure.Time;
+    bool isVariantCondition = GameRules.Data.WinCondition == WinConditionType.MinBubblesOfEachVariantLeft ||
+                             GameRules.Data.WinCondition == WinConditionType.MaxBubblesOfEachVariantLeft;
 
     // Show/hide relevant containers
     _poppedContainer.style.display = isPoppedCondition ? DisplayStyle.Flex : DisplayStyle.None;
-    _leftContainer.style.display = !isPoppedCondition ? DisplayStyle.Flex : DisplayStyle.None;
+    _leftContainer.style.display = (!isPoppedCondition || isVariantCondition) ? DisplayStyle.Flex : DisplayStyle.None;
     _timeContainer.style.display = isTimeSuccess ? DisplayStyle.Flex : DisplayStyle.None;
     _clicksContainer.style.display = !isTimeSuccess ? DisplayStyle.Flex : DisplayStyle.None;
   }
@@ -135,7 +137,32 @@ public class GameUI : MonoBehaviour
   {
     if (_bubblesLeft != null)
     {
-      _bubblesLeft.text = Bubble.ActiveBubbles.Count.ToString("N0");
+      switch (GameRules.Data.WinCondition)
+      {
+        case WinConditionType.MinBubblesOfEachVariantLeft:
+          // Show the minimum count across all variants
+          int minCount = int.MaxValue;
+          for (int i = GameRules.Data.MinVariantId; i < GameRules.Data.VariantCount; i++)
+          {
+            int count = LevelStats.Instance.GetBubbleCountForVariant(i);
+            minCount = Mathf.Min(minCount, count);
+          }
+          _bubblesLeft.text = minCount.ToString("N0");
+          break;
+        case WinConditionType.MaxBubblesOfEachVariantLeft:
+          // Show the maximum count across all variants
+          int maxCount = 0;
+          for (int i = GameRules.Data.MinVariantId; i < GameRules.Data.VariantCount; i++)
+          {
+            int count = LevelStats.Instance.GetBubbleCountForVariant(i);
+            maxCount = Mathf.Max(maxCount, count);
+          }
+          _bubblesLeft.text = maxCount.ToString("N0");
+          break;
+        default:
+          _bubblesLeft.text = Bubble.ActiveBubbles.Count.ToString("N0");
+          break;
+      }
     }
   }
 
@@ -143,7 +170,18 @@ public class GameUI : MonoBehaviour
   {
     if (_bubblesTarget != null)
     {
-      _bubblesTarget.text = GameRules.Data.TargetBubbleCount.ToString("N0");
+      switch (GameRules.Data.WinCondition)
+      {
+        // case WinConditionType.MinBubblesOfEachVariantLeft:
+        //   _bubblesTarget.text = $"≥{GameRules.Data.TargetBubbleCount:N0} each";
+        //   break;
+        // case WinConditionType.MaxBubblesOfEachVariantLeft:
+        //   _bubblesTarget.text = $"≤{GameRules.Data.TargetBubbleCount:N0} each";
+        //   break;
+        default:
+          _bubblesTarget.text = GameRules.Data.TargetBubbleCount.ToString("N0");
+          break;
+      }
     }
   }
 
@@ -178,8 +216,8 @@ public class GameUI : MonoBehaviour
   {
     if (_levelText != null)
     {
-      int currentLevel = SceneManager.GetActiveScene().buildIndex + 1;
-      _levelText.text = $"{currentLevel}";
+      int currentLevel = SceneManager.GetActiveScene().buildIndex;
+      _levelText.text = $"{currentLevel}. {GameRules.Data.LevelName}";
     }
   }
 

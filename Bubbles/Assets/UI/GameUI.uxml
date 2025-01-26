@@ -2,9 +2,11 @@
     <engine:VisualElement name="stats-container" style="position: absolute; top: 26px; right: 24px; flex-direction: column; background-color: rgba(0, 0, 0, 0.85); padding: 12px; border-radius: 10px; gap: 12px; min-width: 150px; border-width: 2px; border-color: rgba(255, 255, 255, 0.2); border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0);">
         <engine:Label name="winner-text" text="WINNER!" style="color: rgb(255, 215, 0); -unity-font-style: bold; font-size: 48px; -unity-text-align: upper-center; display: none; margin: 10px;" />
         <engine:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
-            <engine:Button name="prev-button" text="◀" style="background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); color: white; -unity-font-style: bold; padding: 10px; border-radius: 5px; width: 48px;" />
             <engine:Label name="level-text" text="1" style="color: white; -unity-font-style: bold; font-size: 24px;" />
-            <engine:Button name="next-button" text="▶" style="background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); color: white; -unity-font-style: bold; padding: 10px; border-radius: 5px; width: 48px;" />
+        </engine:VisualElement>
+        <engine:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
+            <engine:Button name="prev-button" text="&lt;" style="background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); color: white; -unity-font-style: bold; padding: 10px; border-radius: 5px; width: 48px;" />
+            <engine:Button name="next-button" text="&gt;" style="background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); color: white; -unity-font-style: bold; padding: 10px; border-radius: 5px; width: 48px;" />
         </engine:VisualElement>
         <engine:VisualElement name="time-container" style="flex-direction: column; align-items: center;">
             <engine:Label text="TIME" style="color: white; -unity-font-style: bold; font-size: 16px; margin-bottom: 5px;" />
@@ -19,7 +21,7 @@
             <engine:Label name="bubbles-total-count" text="0" style="color: white; -unity-font-style: bold; font-size: 32px;" />
         </engine:VisualElement>
         <engine:VisualElement name="left-container" style="flex-direction: column; align-items: center;">
-            <engine:Label text="LEFT" style="color: white; -unity-font-style: bold; font-size: 16px; margin-bottom: 5px;" />
+            <engine:Label text="BUBBLES" style="color: white; -unity-font-style: bold; font-size: 16px; margin-bottom: 5px;" />
             <engine:Label name="bubbles-left-count" text="0" style="color: white; -unity-font-style: bold; font-size: 32px;" />
         </engine:VisualElement>
         <engine:VisualElement name="target-container" style="flex-direction: column; align-items: center;">

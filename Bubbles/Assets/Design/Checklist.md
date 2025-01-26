@@ -12,18 +12,18 @@
 - [ ] Split bubbles
 - [ ] Click to shoot
 - [ ] Break on a timer
-- [ ] Grow/shrink on a timer
-- [ ] Grow on click/hold
-- [ ] Pop below size
+- [X] Grow/shrink on a timer
+- [X] Grow on click/hold
+- [X] Pop below size
 - [ ] Pop others only
 - [ ] Merge creates a different variant
 - [ ] Lose volume when merging (ratio)
-- [ ] Invisible bubbles
+- [X] Invisible bubbles
 - [ ] Spike that pops bubble
 
 ## Levels / scenes
 - [X] Menu / starting screen
-- [ ] End scene with dancing bubble and secret
+- [X] End scene with dancing bubble and secret
 
 ## Bubble Spawning & Variants
 - [ ] Spawn only when spawner output is free
@@ -32,10 +32,10 @@
 
 ## Visual Effects
 - [X] Wiggle/wave render
-- [ ] Wave settings per bubble variant
-- [ ] Configurable wave shape
+- [X] Wave settings per bubble variant
+- [X] Configurable wave shape
 - [ ] Configurable interface thickness
-- [ ] Configurable hue per variant
+- [X] Configurable hue per variant
 
 ## UI/UX
 - [ ] Rename levels

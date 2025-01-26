@@ -43,7 +43,8 @@ public class Bubble : MonoBehaviour
   private float _currentHoverT = 0f;  // Transition value for hover effect
 
   public float Radius => Size * 0.5f;
-  private float Volume => Mathf.PI * Size * Size;  // 2D "volume" is area
+  // Volume (area in 2D) is πr²
+  private float Volume => GetVolumeFromSize(Size);
   private Rigidbody2D _rb;
 
   private void Start()
@@ -115,9 +116,9 @@ public class Bubble : MonoBehaviour
 
     // Apply accumulated growth directly to size
     var addedVolume = growth;
-    float currentVolume = Mathf.PI * Mathf.Pow(Size * 0.5f, 2); // Current area (2D volume) from diameter
+    float currentVolume = Volume;  // Use the property which correctly uses radius
     float newVolume = Mathf.Max(variantData.MinSize, currentVolume + addedVolume);
-    Size = 2 * Mathf.Sqrt(newVolume / Mathf.PI); // Compute new diameter from area
+    Size = 2f * Mathf.Sqrt(newVolume / Mathf.PI);  // Multiply by 2 to convert radius to diameter
     UpdateShape();
   }
 
@@ -177,36 +178,38 @@ public class Bubble : MonoBehaviour
           return;
         }
       }
+      else if (variantData.PopOtherVariants && overlapRatio >= variantData.MinOverlapToPop)
+      {
+        otherBubble.Pop();
+        return;
+      }
 
       // Apply variant-based forces
       VariantForceType forceType = isMatchingVariant ?
         variantData.MatchingVariantForce :
         variantData.NonMatchingVariantForce;
 
-      if (forceType != VariantForceType.None)
+      // Calculate force based on type
+      float forceMagnitude = 0f;
+      switch (forceType)
       {
-        // Calculate base force magnitude
-        float forceMagnitude;
-        if (forceType == VariantForceType.Attract)
-        {
+        case VariantForceType.Attract:
           // Attraction increases with distance up to combined radii
           float distanceRatio = Mathf.Clamp01(distance / combinedRadii);
           forceMagnitude = variantData.AttractionForce * distanceRatio;
           direction = -direction; // Reverse direction for attraction
-        }
-        else // Repulse
-        {
-          // Repulsion increases with overlap
+          break;
+        case VariantForceType.Repulse:
           forceMagnitude = variantData.RepulsionForce * overlapRatio;
-        }
-
-        // Apply forces to both bubbles' Rigidbodies
-        Vector2 force = direction * forceMagnitude;
-        Rigidbody2D otherRb = other.GetComponent<Rigidbody2D>();
-
-        if (rb != null) rb.AddForce(force, ForceMode2D.Force);
-        if (otherRb != null) otherRb.AddForce(-force, ForceMode2D.Force);
+          break;
       }
+
+      // Apply forces to both bubbles' Rigidbodies
+      Vector2 force = direction * forceMagnitude;
+      Rigidbody2D otherRb = other.GetComponent<Rigidbody2D>();
+
+      if (rb != null) rb.AddForce(force, ForceMode2D.Force);
+      if (otherRb != null) otherRb.AddForce(-force, ForceMode2D.Force);
     }
     else if (other.CompareTag("Wall"))
     {
@@ -239,8 +242,9 @@ public class Bubble : MonoBehaviour
     if (_isAnimating || other._isAnimating) return;
 
     // Calculate new bubble properties
-    float combinedVolume = Volume + other.Volume;
-    float newSize = Mathf.Sqrt(combinedVolume / Mathf.PI);
+    BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+    float combinedVolume = (Volume + other.Volume) * variantData.MergeVolumeFactor;
+    float newSize = GetSizeFromVolume(combinedVolume);
 
     // Start merge effect
     _isAnimating = true;
@@ -298,7 +302,7 @@ public class Bubble : MonoBehaviour
 
       // Set properties of new bubble
       newBubbleComponent.Size = newSize;
-      newBubbleComponent.Variant = Variant;
+      newBubbleComponent.Variant = variantData.MergedVariant >= 0 ? variantData.MergedVariant : Variant;
 
       // Apply merge effect to nearby bubbles
       ApplyMergeEffect(newPosition, newSize);
@@ -482,6 +486,55 @@ public class Bubble : MonoBehaviour
         }
       }
 
+      // Handle splitting
+      if (variantData.PopSplitCount > 0)
+      {
+        float splitVolume = GetVolumeFromSize(initialSize) * variantData.PopSplitVolumeFactor;
+        float volumePerSplit = splitVolume / variantData.PopSplitCount;
+        float sizePerSplit = GetSizeFromVolume(volumePerSplit);
+        int targetVariant = variantData.PopSplitVariant >= 0 ? variantData.PopSplitVariant : Variant;
+
+        // Only spawn up to available bubble slots
+        int availableSlots = GameRules.Data.MaxBubbles - Bubble.ActiveBubbles.Count + 1; // +1 because this bubble is being destroyed
+        int splitCount = Mathf.Min(variantData.PopSplitCount, availableSlots);
+
+        for (int i = 0; i < splitCount; i++)
+        {
+          // Random position within current bubble
+          float randomAngle = Random.Range(0f, 2f * Mathf.PI);
+          float randomRadius = Random.Range(0f, Radius);
+          Vector2 offset = new Vector2(
+            Mathf.Cos(randomAngle) * randomRadius,
+            Mathf.Sin(randomAngle) * randomRadius
+          );
+          Vector2 splitPosition = (Vector2)transform.position + offset;
+
+          // Create split bubble
+          GameObject splitBubble = Instantiate(gameObject, splitPosition, Quaternion.identity);
+          splitBubble.name = gameObject.name;
+          Bubble splitComponent = splitBubble.GetComponent<Bubble>();
+          if (splitComponent != null)
+          {
+            splitComponent.Size = sizePerSplit;
+            splitComponent.Variant = targetVariant;
+            splitComponent.UpdateShape();
+
+            // Apply random impulse
+            Rigidbody2D splitRb = splitBubble.GetComponent<Rigidbody2D>();
+            if (splitRb != null)
+            {
+              BubbleVariant splitVariantData = GameRules.BubbleVariantData(targetVariant);
+              float randomForce = Random.Range(splitVariantData.InitialImpulse / 2, splitVariantData.InitialImpulse);
+              Vector2 randomDirection = new Vector2(
+                Mathf.Cos(randomAngle),
+                Mathf.Sin(randomAngle)
+              );
+              splitRb.AddForce(randomDirection * randomForce, ForceMode2D.Impulse);
+            }
+          }
+        }
+      }
+
       // Destroy the bubble
       Destroy(gameObject);
     }
@@ -504,6 +557,17 @@ public class Bubble : MonoBehaviour
     {
       Pop();
     }
+  }
+
+  private static float GetSizeFromVolume(float volume)
+  {
+    return 2f * Mathf.Sqrt(volume / Mathf.PI);  // Multiply by 2 to convert radius to diameter
+  }
+
+  private static float GetVolumeFromSize(float size)
+  {
+    float radius = size * 0.5f;  // Convert diameter to radius
+    return Mathf.PI * radius * radius;  // πr²
   }
 
   private void OnDrawGizmos()
@@ -538,6 +602,19 @@ public class Bubble : MonoBehaviour
       if (_rb.linearVelocity.magnitude > variantData.MaxVelocity)
       {
         _rb.linearVelocity = _rb.linearVelocity.normalized * variantData.MaxVelocity;
+      }
+
+      // Apply mouse attraction if held
+      if (_isHeld && variantData.AttractToMouseOnHold > 0)
+      {
+        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 toMouse = mousePosition - (Vector2)transform.position;
+        float distance = toMouse.magnitude;
+        if (distance > 0.001f)  // Avoid division by zero
+        {
+          Vector2 force = toMouse.normalized * variantData.AttractToMouseOnHold;
+          _rb.AddForce(force, ForceMode2D.Force);
+        }
       }
     }
   }
