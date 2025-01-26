@@ -169,6 +169,7 @@ MonoBehaviour:
   Size: 1
   CoreSizeRatio: 0.6
   Invulnerable: 0
+  Variant: 0
   _bubbleCollider: {fileID: 8143102461621133006}
   _coreCollider: {fileID: 6346567385533156342}
   _soundManager: {fileID: 11400000, guid: ec863dd3f2f1c39459e72f2d992ab5c5, type: 2}

@@ -33,9 +33,11 @@ public class Bubble : MonoBehaviour
 
   public float Radius => Size * 0.5f;
   private float Volume => Mathf.PI * Size * Size;  // 2D "volume" is area
+  private Rigidbody2D _rb;
 
   private void Start()
   {
+    _rb = GetComponent<Rigidbody2D>();
     UpdateShape();
     _activeBubbles.Add(this);
   }
@@ -81,7 +83,11 @@ public class Bubble : MonoBehaviour
   {
     if (_isAnimating) return; // Skip collision checks if animating
 
-    if (other.gameObject.CompareTag("Bubble"))
+    BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+    Rigidbody2D rb = GetComponent<Rigidbody2D>();
+    if (rb == null) return;
+
+    if (other.CompareTag("Bubble"))
     {
       Bubble otherBubble = other.GetComponent<Bubble>();
       if (otherBubble == null || otherBubble._isAnimating) return;
@@ -93,12 +99,10 @@ public class Bubble : MonoBehaviour
       float overlap = Mathf.Max(0, combinedRadii - distance);
       float overlapRatio = overlap / combinedRadii;
 
-      // Get variant data
-      BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
-      BubbleVariant otherVariantData = GameRules.BubbleVariantData(otherBubble.Variant);
-
       // Check for matching variants and sufficient overlap
-      if (Variant == otherBubble.Variant)
+      bool isMatchingVariant = Variant == otherBubble.Variant;
+
+      if (isMatchingVariant)
       {
         if (variantData.PopMatchingVariants && overlapRatio >= variantData.MinOverlapToPop)
         {
@@ -113,20 +117,56 @@ public class Bubble : MonoBehaviour
         }
       }
 
-      // Only repel if penetrating
-      if (distance < combinedRadii)
-      {
-        // Force based on penetration depth
-        float forceMagnitude = variantData.RepulsionForce * overlapRatio;
+      // Apply variant-based forces
+      VariantForceType forceType = isMatchingVariant ?
+        variantData.MatchingVariantForce :
+        variantData.NonMatchingVariantForce;
 
-        Vector2 force = direction * forceMagnitude;
+      if (forceType != VariantForceType.None)
+      {
+        // Calculate base force magnitude
+        float forceMagnitude;
+        if (forceType == VariantForceType.Attract)
+        {
+          // Attraction increases with distance up to combined radii
+          float distanceRatio = Mathf.Clamp01(distance / combinedRadii);
+          forceMagnitude = variantData.AttractionForce * distanceRatio;
+          direction = -direction; // Reverse direction for attraction
+        }
+        else // Repulse
+        {
+          // Repulsion increases with overlap
+          forceMagnitude = variantData.RepulsionForce * overlapRatio;
+        }
 
         // Apply forces to both bubbles' Rigidbodies
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        Vector2 force = direction * forceMagnitude;
         Rigidbody2D otherRb = other.GetComponent<Rigidbody2D>();
 
         if (rb != null) rb.AddForce(force, ForceMode2D.Force);
         if (otherRb != null) otherRb.AddForce(-force, ForceMode2D.Force);
+      }
+    }
+    else if (other.CompareTag("Wall"))
+    {
+      // Get the closest point on the wall collider to the bubble's center
+      Vector2 bubbleCenter = (Vector2)transform.position;
+      Vector2 closestPoint = other.ClosestPoint(bubbleCenter);
+
+      // Calculate direction and distance
+      Vector2 direction = (bubbleCenter - closestPoint).normalized;
+      float distance = Vector2.Distance(bubbleCenter, closestPoint);
+
+      // Calculate overlap and force
+      float overlap = Mathf.Max(0, Radius - distance);
+      float overlapRatio = overlap / Radius;
+
+      // Apply repulsion force if overlapping
+      if (overlap > 0)
+      {
+        float forceMagnitude = variantData.RepulsionForce * overlapRatio;
+        Vector2 force = direction * forceMagnitude;
+        rb.AddForce(force, ForceMode2D.Force);
       }
     }
   }
@@ -275,24 +315,31 @@ public class Bubble : MonoBehaviour
     return closest;
   }
 
-  public static void TryPopAtPoint(Vector2 point)
+  public static bool TryPopAtPoint(Vector2 point)
   {
     Bubble closest = FindClosestBubbleTo(point);
     if (closest != null && closest.DistanceToPoint(point) < 1)  // Check if point is inside bubble
     {
-      closest.Pop();
+      BubbleVariant variantData = GameRules.BubbleVariantData(closest.Variant);
+      if (variantData.PopOnClick)
+      {
+        return closest.Pop();
+      }
     }
+    return false;
   }
 
-  public void Pop()
+  public bool Pop()
   {
-    if (IsPopped) return;
-    if (Invulnerable) return;
-    if (_isAnimating) return;
+    if (IsPopped) return false;
+    if (Invulnerable) return false;
+    if (_isAnimating) return false;
 
     IsPopped = true;
     _isAnimating = true;
+    LevelStats.Instance.BubblesPopped.Increment();
     StartCoroutine(PopEffect());
+    return true;
   }
 
   private IEnumerator PopEffect()
@@ -413,21 +460,24 @@ public class Bubble : MonoBehaviour
   private void FixedUpdate()
   {
     // Apply drag force
-    Rigidbody2D rb = GetComponent<Rigidbody2D>();
-    if (rb != null)
+    if (_rb != null)
     {
       BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
 
       // Update gravity scale
-      rb.gravityScale = variantData.GravityFactor;
+      _rb.gravityScale = variantData.GravityFactor;
+
+      // Update mass with non-linear scaling
+      float area = Mathf.PI * Size * Size * 0.25f; // πr² = π(d/2)²
+      _rb.mass = variantData.Density * Mathf.Pow(area, 0.8f);
 
       // Apply drag force
-      rb.AddForce(-rb.linearVelocity * variantData.DragForce, ForceMode2D.Force);
+      _rb.AddForce(-_rb.linearVelocity * variantData.DragForce, ForceMode2D.Force);
 
       // Clamp velocity
-      if (rb.linearVelocity.magnitude > variantData.MaxVelocity)
+      if (_rb.linearVelocity.magnitude > variantData.MaxVelocity)
       {
-        rb.linearVelocity = rb.linearVelocity.normalized * variantData.MaxVelocity;
+        _rb.linearVelocity = _rb.linearVelocity.normalized * variantData.MaxVelocity;
       }
     }
   }

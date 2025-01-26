@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[ExecuteAlways]
 public class Level : MonoBehaviour
 {
   [Header("Level Configuration")]
@@ -8,11 +9,25 @@ public class Level : MonoBehaviour
 
   private void OnEnable()
   {
-    GameRules.RegisterLevelRules(_levelRules);
+    if (_levelRules != null)
+    {
+      GameRules.RegisterLevelRules(_levelRules);
+    }
   }
 
   private void OnDisable()
   {
-    GameRules.UnregisterLevelRules(_levelRules);
+    if (_levelRules != null)
+    {
+      GameRules.UnregisterLevelRules(_levelRules);
+    }
+  }
+
+  private void OnValidate()
+  {
+    if (_levelRules != null)
+    {
+      GameRules.RegisterLevelRules(_levelRules);
+    }
   }
 }

@@ -120,11 +120,16 @@ void CalculateBubbleColor_float(
     float bubbleIndex = ClosestBubbleData.w;
     
     float4 bubbleData1 = GetBubbleData(BubbleData, BubbleDataSampler, bubbleIndex, 1, MaxBubbleCount);
-    float hue = bubbleData1.r;
+    float4 bubbleData2 = GetBubbleData(BubbleData, BubbleDataSampler, bubbleIndex, 2, MaxBubbleCount);
     float hoverT = bubbleData1.g;
 
-    // Convert hue to RGB color
-    float3 bubbleColor = HsvToRgb(float3(hue, 0.7, 0.6));
+    // Get full HSV color data
+    float hue = bubbleData2.r;
+    float saturation = bubbleData2.g;
+    float value = bubbleData2.b;
+
+    // Convert HSV to RGB color
+    float3 bubbleColor = HsvToRgb(float3(hue, saturation, value));
 
     // Calculate outline thickness and color based on hover state
     float currentOutlineThickness = lerp(OutlineThickness, HoverOutlineThickness, hoverT);

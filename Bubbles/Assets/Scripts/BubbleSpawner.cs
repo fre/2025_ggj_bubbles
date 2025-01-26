@@ -55,16 +55,12 @@ public class BubbleSpawner : MonoBehaviour
             bubbleComponent.Variant = variant;
             bubbleComponent.Size = Random.Range(variantData.SizeRange.x, variantData.SizeRange.y);
             bubbleComponent.CoreSizeRatio = variantData.CoreSizeRatio;
+            bubbleComponent.UpdateShape();
 
-            // Set mass based on density and size
+            // Apply initial impulse
             Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
             if (rb != null)
             {
-                float density = Random.Range(variantData.DensityRange.x, variantData.DensityRange.y);
-                float area = Mathf.PI * bubbleComponent.Size * bubbleComponent.Size * 0.25f; // πr² = π(d/2)²
-                rb.mass = density * area;
-
-                // Apply initial impulse
                 float impulse = variantData.InitialImpulse;
                 float randomForce = Random.Range(impulse / 2, impulse);
                 float randomAngle = Random.Range(0f, 360f);

@@ -18,7 +18,10 @@ public class BubbleInput : MonoBehaviour
       Vector2? worldPoint = GetMouseWorldPoint();
       if (worldPoint.HasValue)
       {
-        Bubble.TryPopAtPoint(worldPoint.Value);
+        if (Bubble.TryPopAtPoint(worldPoint.Value))
+        {
+          LevelStats.Instance.BubblesPoppedByClick.Increment();
+        }
       }
     }
   }

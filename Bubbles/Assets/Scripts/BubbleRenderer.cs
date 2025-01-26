@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[ExecuteAlways]
 [RequireComponent(typeof(MeshRenderer))]
 public class BubbleRenderer : MonoBehaviour
 {
@@ -21,20 +22,32 @@ public class BubbleRenderer : MonoBehaviour
 
   private Material _material;
   private Texture2D _bubbleDataTexture;
+  private GameRulesData _lastRules;
 
   private static int CHANNELS_PER_BUBBLE = 4;
 
   private void Awake()
   {
-    _material = GetComponent<MeshRenderer>().material;
+    Initialize();
+  }
 
-    // Create texture for bubble data (2D texture: X = different data types, Y = bubbles)
-    _bubbleDataTexture = new Texture2D(CHANNELS_PER_BUBBLE, GameRules.Data.MaxBubbles, TextureFormat.RGBAFloat, false);
+  private void OnEnable()
+  {
+    _lastRules = GameRules.Data;
+  }
+
+  private void CreateBubbleDataTexture(int maxBubbles)
+  {
+    if (_bubbleDataTexture != null)
+    {
+      DestroyImmediate(_bubbleDataTexture);
+    }
+    _bubbleDataTexture = new Texture2D(CHANNELS_PER_BUBBLE, maxBubbles, TextureFormat.RGBAFloat, false);
     _bubbleDataTexture.filterMode = FilterMode.Point;
     _bubbleDataTexture.wrapMode = TextureWrapMode.Clamp;
 
     // Initialize with empty data
-    Color[] initialData = new Color[CHANNELS_PER_BUBBLE * GameRules.Data.MaxBubbles];
+    Color[] initialData = new Color[CHANNELS_PER_BUBBLE * maxBubbles];
     for (int i = 0; i < initialData.Length; i++)
     {
       initialData[i] = Color.clear;
@@ -42,11 +55,32 @@ public class BubbleRenderer : MonoBehaviour
     _bubbleDataTexture.SetPixels(initialData);
     _bubbleDataTexture.Apply();
 
+    _material.SetTexture(BubbleDataProperty, _bubbleDataTexture);
+    _material.SetFloat(MaxBubbleCountProperty, maxBubbles);
+  }
+
+  private void Initialize()
+  {
+    if (_material != null) return;
+
+    if (GameRules.Data == null)
+    {
+      Debug.LogError("GameRules.Data is null! Cannot initialize BubbleRenderer.");
+      return;
+    }
+
+    _material = GetComponent<MeshRenderer>().material;
+    if (_material == null)
+    {
+      Debug.LogError("Material is null! Cannot initialize BubbleRenderer.");
+      return;
+    }
+
     IndexPropertyIds();
 
-    // Assign texture and shader properties
-    _material.SetTexture(BubbleDataProperty, _bubbleDataTexture);
-    _material.SetFloat(MaxBubbleCountProperty, GameRules.Data.MaxBubbles);
+    // Create texture for bubble data
+    int maxBubbles = Mathf.Max(1, GameRules.Data.MaxBubbles); // Ensure at least 1 bubble
+    CreateBubbleDataTexture(maxBubbles);
     UpdateShaderProperties();
   }
 
@@ -75,27 +109,68 @@ public class BubbleRenderer : MonoBehaviour
     _material.SetFloat(EdgeOpacityProperty, GameRules.Data.EdgeOpacity);
     _material.SetFloat(OpacityFalloffProperty, GameRules.Data.OpacityFalloff);
     _material.SetFloat(OpacitySmoothingProperty, GameRules.Data.OpacitySmoothing);
-    _material.SetColor(OutlineColorProperty, GameRules.Data.OutlineColor);
-    _material.SetColor(BackgroundColorProperty, GameRules.Data.BackgroundColor);
-    _material.SetColor(HoverOutlineColorProperty, GameRules.Data.HoverOutlineColor);
+    _material.SetVector(OutlineColorProperty, GameRules.Data.OutlineColor);
+    _material.SetVector(BackgroundColorProperty, GameRules.Data.BackgroundColor);
+    _material.SetVector(HoverOutlineColorProperty, GameRules.Data.HoverOutlineColor);
     _material.SetFloat(HoverOutlineThicknessProperty, GameRules.Data.HoverOutlineThickness);
     _material.SetFloat(OutlineSmoothRadiusProperty, GameRules.Data.OutlineSmoothRadius);
     _material.SetFloat(SmallRadiusPreservationFactorProperty, GameRules.Data.SmallRadiusPreservationFactor);
   }
 
+  private void OnValidate()
+  {
+    if (!Application.isPlaying)
+    {
+      Initialize();
+    }
+  }
+
+  private void Update()
+  {
+    // Check if rules have changed
+    if (_lastRules != GameRules.Data)
+    {
+      _lastRules = GameRules.Data;
+      UpdateShaderProperties();
+    }
+
+    if (!Application.isPlaying)
+    {
+      UpdateShaderProperties();
+    }
+  }
+
   private void LateUpdate()
   {
-    // Get active bubbles from static list
-    var activeBubbles = Bubble.ActiveBubbles;
-    int bubbleCount = Mathf.Min(activeBubbles.Count, GameRules.Data.MaxBubbles);
-    Color[] bubbleData = new Color[CHANNELS_PER_BUBBLE * GameRules.Data.MaxBubbles];
+    if (_material == null) Initialize();
+    if (_material == null || GameRules.Data == null) return;
+
+    int maxBubbles = Mathf.Max(1, GameRules.Data.MaxBubbles);
+
+    // Check if texture needs to be recreated
+    if (_bubbleDataTexture == null || _bubbleDataTexture.height != maxBubbles)
+    {
+      CreateBubbleDataTexture(maxBubbles);
+    }
+
+    // Get active bubbles from static list or FindObjectsOfType in editor
+    IReadOnlyList<Bubble> activeBubbles = Application.isPlaying ?
+      Bubble.ActiveBubbles :
+      GameObject.FindObjectsByType<Bubble>(FindObjectsSortMode.None);
+
+    if (activeBubbles == null) return;
+
+    int bubbleCount = Mathf.Min(activeBubbles.Count, maxBubbles);
+    Color[] bubbleData = new Color[CHANNELS_PER_BUBBLE * maxBubbles];
 
     // Update texture data
-    for (int i = 0; i < GameRules.Data.MaxBubbles; i++)
+    for (int i = 0; i < maxBubbles; i++)
     {
-      if (i < bubbleCount)
+      if (i < bubbleCount && i < activeBubbles.Count)
       {
         var bubble = activeBubbles[i];
+        if (bubble == null) continue;
+
         Vector3 worldPos = bubble.transform.position;
         float radius = bubble.Radius;
 
@@ -108,8 +183,9 @@ public class BubbleRenderer : MonoBehaviour
         // Column 1: Hover state and hue only
         bubbleData[baseIndex + 1] = new Color(bubble.Hue, bubble.HoverT, 0, 0);
 
-        // Column 2: Reserved for future use
-        bubbleData[baseIndex + 2] = Color.clear;
+        // Column 2: Full HSV color data (hue, saturation, value)
+        BubbleVariant variantData = GameRules.BubbleVariantData(bubble.Variant);
+        bubbleData[baseIndex + 2] = new Color(bubble.Hue, variantData.ColorSaturation, variantData.ColorValue, 0);
 
         // Column 3: Wave parameters (amplitude, count, rotation)
         float waveRotation = (Time.time * GameRules.Data.WaveRotationSpeed * 2 * Mathf.PI) % (2 * Mathf.PI);
