@@ -138,6 +138,7 @@ void CalculateBubbleColor_float(
     float4 bubbleData1 = GetBubbleData(BubbleData, BubbleDataSampler, bubbleIndex, 1, MaxBubbleCount);
     float4 bubbleData2 = GetBubbleData(BubbleData, BubbleDataSampler, bubbleIndex, 2, MaxBubbleCount);
     float hoverT = bubbleData1.g;
+    float bubbleOpacity = bubbleData2.a;
 
     // Get full HSV color data
     float hue = bubbleData2.r;
@@ -181,8 +182,8 @@ void CalculateBubbleColor_float(
     Color = lerp(bubbleColor, currentOutlineColor.rgb, outlineStrength);
     Alpha = lerp(baseAlpha, currentOutlineColor.a, outlineStrength);
     
-    // Ensure we're fully transparent outside the bubble
-    Alpha *= (ClosestDist < 1);
+    // Apply bubble variant opacity and ensure we're fully transparent outside the bubble
+    Alpha *= bubbleOpacity * (ClosestDist < 1);
 }
 
 #endif 

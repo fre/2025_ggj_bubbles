@@ -10,10 +10,19 @@ public class Bubble : MonoBehaviour
 
   [Header("Bubble Properties")]
   public float Size = 1f;
-  public float CoreSizeRatio = 0.6f;
+  public float CoreSizeRatio => GameRules.BubbleVariantData(Variant).CoreSizeRatio;
   public bool Invulnerable = false;
   public int Variant;
-  public float Hue => (float)Variant / GameRules.Data.VariantCount;
+  private bool _isClicked = false;
+  private bool _isHeld = false;
+  public float Hue
+  {
+    get
+    {
+      var variantData = GameRules.BubbleVariantData(Variant);
+      return variantData.UseOverrideHue ? variantData.ColorHue : (float)Variant / GameRules.Data.VariantCount;
+    }
+  }
   public float Saturation => GameRules.BubbleVariantData(Variant).ColorSaturation;
   public float Value => GameRules.BubbleVariantData(Variant).ColorValue;
   public bool IsPopped { get; private set; }
@@ -55,12 +64,61 @@ public class Bubble : MonoBehaviour
     float targetHoverT = _isHovered ? 1f : 0f;
     _currentHoverT = Mathf.MoveTowards(_currentHoverT, targetHoverT, Time.deltaTime * GameRules.Data.HoverTransitionSpeed);
 
-    // Check if bubble has grown too large
-    BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
-    if (Size >= variantData.PopAtSize && !Invulnerable && !_isAnimating)
+    // Check for mouse input and update growth
+    if (_isHovered)
     {
-      Pop();
+      _isClicked = Input.GetMouseButtonDown(0);
+      _isHeld = Input.GetMouseButton(0);
     }
+    else
+    {
+      _isClicked = false;
+      _isHeld = false;
+    }
+    UpdateGrowth();
+
+    // Check size limits
+    BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+    if (!Invulnerable && !_isAnimating)
+    {
+      if (Size >= variantData.PopAtSize)
+      {
+        Pop();
+      }
+      else if (variantData.PopBelowSize > 0 && Size <= variantData.PopBelowSize)
+      {
+        Pop();
+      }
+    }
+  }
+
+  private void UpdateGrowth()
+  {
+    if (_isAnimating) return; // Don't affect size during animations
+
+    BubbleVariant variantData = GameRules.BubbleVariantData(Variant);
+
+    var growth = 0f;
+    if (_isClicked)
+    {
+      growth += variantData.GrowVolumeOnClick;
+    }
+    if (_isHeld)
+    {
+      growth += variantData.GrowVolumeOnHold * Time.deltaTime;
+    }
+    if (_isHovered)
+    {
+      growth += variantData.GrowVolumeOnHover * Time.deltaTime;
+    }
+    growth += variantData.GrowVolumeOverTime * Time.deltaTime;
+
+    // Apply accumulated growth directly to size
+    var addedVolume = growth;
+    float currentVolume = Mathf.PI * Mathf.Pow(Size * 0.5f, 2); // Current area (2D volume) from diameter
+    float newVolume = Mathf.Max(variantData.MinSize, currentVolume + addedVolume);
+    Size = 2 * Mathf.Sqrt(newVolume / Mathf.PI); // Compute new diameter from area
+    UpdateShape();
   }
 
   public void SetHovered(bool hovered)
@@ -68,6 +126,7 @@ public class Bubble : MonoBehaviour
     if (_isHovered != hovered)
     {
       _isHovered = hovered;
+      UpdateGrowth();
     }
   }
 
@@ -240,7 +299,6 @@ public class Bubble : MonoBehaviour
       // Set properties of new bubble
       newBubbleComponent.Size = newSize;
       newBubbleComponent.Variant = Variant;
-      newBubbleComponent.CoreSizeRatio = variantData.CoreSizeRatio;
 
       // Apply merge effect to nearby bubbles
       ApplyMergeEffect(newPosition, newSize);

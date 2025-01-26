@@ -180,12 +180,12 @@ public class BubbleRenderer : MonoBehaviour
         // Column 0: Position, radius, and bubble index
         bubbleData[baseIndex] = new Color(worldPos.x, worldPos.y, radius, i);
 
-        // Column 1: Hover state and hue only
+        // Column 1: Hover state and hue
+        BubbleVariant variantData = GameRules.BubbleVariantData(bubble.Variant);
         bubbleData[baseIndex + 1] = new Color(bubble.Hue, bubble.HoverT, 0, 0);
 
         // Column 2: Full HSV color data (hue, saturation, value)
-        BubbleVariant variantData = GameRules.BubbleVariantData(bubble.Variant);
-        bubbleData[baseIndex + 2] = new Color(bubble.Hue, variantData.ColorSaturation, variantData.ColorValue, 0);
+        bubbleData[baseIndex + 2] = new Color(bubble.Hue, variantData.ColorSaturation, variantData.ColorValue, variantData.Opacity);
 
         // Column 3: Wave parameters (amplitude, count, rotation)
         float waveRotation = (Time.time * GameRules.Data.WaveRotationSpeed * 2 * Mathf.PI) % (2 * Mathf.PI);

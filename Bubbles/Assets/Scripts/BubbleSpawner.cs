@@ -59,7 +59,7 @@ public class BubbleSpawner : MonoBehaviour
         }
 
         // Get random variant info first to know the size
-        int variant = Random.Range(0, GameRules.Data.VariantCount);
+        int variant = Random.Range(GameRules.Data.MinVariantId, GameRules.Data.VariantCount);
         BubbleVariant variantData = GameRules.BubbleVariantData(variant);
         float bubbleSize = Random.Range(variantData.SizeRange.x, variantData.SizeRange.y);
 
@@ -92,7 +92,6 @@ public class BubbleSpawner : MonoBehaviour
         {
             bubbleComponent.Variant = variant;
             bubbleComponent.Size = bubbleSize;
-            bubbleComponent.CoreSizeRatio = variantData.CoreSizeRatio;
             bubbleComponent.UpdateShape();
 
             // Apply initial impulse

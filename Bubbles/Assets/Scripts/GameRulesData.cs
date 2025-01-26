@@ -31,6 +31,7 @@ public class GameRulesData : ScriptableObject
   [Header("Spawning")]
   public float SpawnInterval = 0.1f;
   public int InitialSpawnCount = 5;
+  public int MinVariantId = 0;  // Minimum variant ID to spawn (inclusive)
 
   [Header("Rendering")]
   public float OutlineThickness = 0.05f;

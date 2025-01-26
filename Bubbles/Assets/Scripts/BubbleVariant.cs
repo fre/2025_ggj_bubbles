@@ -13,6 +13,9 @@ public class BubbleVariant : ScriptableObject
   [Header("Visual")]
   public float ColorSaturation = 0.7f;
   public float ColorValue = 0.6f;
+  public bool UseOverrideHue = false;  // Whether to use the override hue instead of variant index
+  public float ColorHue = 0f;          // Hue value to use when UseOverrideHue is true (0-1 range)
+  public float Opacity = 1f;           // Global opacity multiplier for this variant
 
   [Header("Physics")]
   public float InitialImpulse = 5f;
@@ -27,6 +30,7 @@ public class BubbleVariant : ScriptableObject
 
   [Header("Spawning")]
   public Vector2 SizeRange = new Vector2(1.2f, 3f);
+  public float MinSize = 0.1f;
   public float Density = 1f;  // Mass per unit area
 
   [Header("Pop Effects")]
@@ -39,7 +43,8 @@ public class BubbleVariant : ScriptableObject
   public float PopRadiusRatio = 1.5f;
   public float PopDelay = 0.2f;
   public float PopSizeIncrease = 1.5f;
-  public float PopAtSize = 5.0f;
+  public float PopAtSize = 10.0f;
+  public float PopBelowSize = 0f;    // Pop when size goes below this (0 = disabled)
 
   [Header("Merge Effects")]
   public bool MergeMatchingVariants = true;
@@ -48,4 +53,10 @@ public class BubbleVariant : ScriptableObject
   public float MergeRadiusRatio = 1.5f;
   public float MergeDelay = 0.2f;
   public float MergeSizeShrink = 0.7f;
+
+  [Header("Grow Effects")]
+  public float GrowVolumeOnClick = 0f;
+  public float GrowVolumeOnHold = 0f;
+  public float GrowVolumeOnHover = 0f;
+  public float GrowVolumeOverTime = 0f;
 }

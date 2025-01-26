@@ -8,14 +8,12 @@ public class BubbleEditor : Editor
 {
     private SerializedProperty _sizeProperty;
     private SerializedProperty _variantProperty;
-    private SerializedProperty _coreSizeRatioProperty;
     private Tool _lastTool;
 
     private void OnEnable()
     {
         _sizeProperty = serializedObject.FindProperty("Size");
         _variantProperty = serializedObject.FindProperty("Variant");
-        _coreSizeRatioProperty = serializedObject.FindProperty("CoreSizeRatio");
         _lastTool = Tools.current;
     }
 
@@ -103,7 +101,6 @@ public class BubbleEditor : Editor
     {
         Undo.RecordObject(bubble, "Change Bubble Variant");
         bubble.Variant = newVariant;
-        bubble.CoreSizeRatio = GameRules.BubbleVariantData(newVariant).CoreSizeRatio;
         bubble.UpdateShape();
         EditorUtility.SetDirty(bubble);
     }

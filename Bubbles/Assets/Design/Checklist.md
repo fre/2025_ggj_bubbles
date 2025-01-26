@@ -22,12 +22,12 @@
 - [ ] Spike that pops bubble
 
 ## Levels / scenes
-- [ ] Menu / starting screen
+- [X] Menu / starting screen
 - [ ] End scene with dancing bubble and secret
 
 ## Bubble Spawning & Variants
 - [ ] Spawn only when spawner output is free
-- [ ] Min variant ID spawn setting
+- [X] Min variant ID spawn setting
 - [ ] Spawner variants
 
 ## Visual Effects
