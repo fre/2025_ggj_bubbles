@@ -111,7 +111,7 @@ public class BubbleSpawner : MonoBehaviour
         // Check if the bubble can be popped
         if (bubbleToPop != null && !bubbleToPop.Invulnerable)
         {
-            bubbleToPop.Pop();
+            bubbleToPop.Pop(false);
             return true;
         }
 

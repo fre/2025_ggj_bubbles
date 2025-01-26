@@ -31,6 +31,7 @@ public class BubbleVariant : ScriptableObject
   public float CoreSizeRatio = 0.6f;
   public float RepulsionForce = 5f;
   public float AttractionForce = 3f;
+  public float InvulnerabilityDuration = 0f;  // Duration in seconds the bubble is invulnerable after spawning
   public float AttractToMouseOnHold = 0f;  // Force to apply towards mouse when held (0 = disabled)
   public float AttractToMouse = 0f;
   public VariantForceType MatchingVariantForce = VariantForceType.Repulse;

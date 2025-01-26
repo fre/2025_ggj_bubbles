@@ -11,7 +11,8 @@ public class Bubble : MonoBehaviour
   [Header("Bubble Properties")]
   public float Size = 1f;
   public float CoreSizeRatio => GameRules.BubbleVariantData(Variant).CoreSizeRatio;
-  public bool Invulnerable = false;
+  public bool Invulnerable { get; private set; }
+  private float _invulnerabilityEndTime = -1f;
   public int Variant;
   private bool _isClicked = false;
   private bool _isHeld = false;
@@ -52,6 +53,22 @@ public class Bubble : MonoBehaviour
     _rb = GetComponent<Rigidbody2D>();
     UpdateShape();
     _activeBubbles.Add(this);
+
+    // Set initial invulnerability if specified
+    float invulnerabilityDuration = GameRules.BubbleVariantData(Variant).InvulnerabilityDuration;
+    if (invulnerabilityDuration > 0)
+    {
+      SetInvulnerable(invulnerabilityDuration);
+    }
+  }
+
+  private void SetInvulnerable(float duration)
+  {
+    if (duration > 0)
+    {
+      Invulnerable = true;
+      _invulnerabilityEndTime = Time.time + duration;
+    }
   }
 
   private void OnDestroy()
@@ -61,6 +78,13 @@ public class Bubble : MonoBehaviour
 
   private void Update()
   {
+    // Check invulnerability timeout
+    if (Invulnerable && _invulnerabilityEndTime > 0 && Time.time >= _invulnerabilityEndTime)
+    {
+      Invulnerable = false;
+      _invulnerabilityEndTime = -1f;
+    }
+
     // Update hover transition
     float targetHoverT = _isHovered ? 1f : 0f;
     _currentHoverT = Mathf.MoveTowards(_currentHoverT, targetHoverT, Time.deltaTime * GameRules.Data.HoverTransitionSpeed);
@@ -159,30 +183,14 @@ public class Bubble : MonoBehaviour
       float distance = Vector2.Distance(transform.position, other.transform.position);
       float combinedRadii = Radius + otherBubble.Radius;
       float overlap = Mathf.Max(0, combinedRadii - distance);
-      float overlapRatio = overlap / combinedRadii;
+
+      // Calculate overlap ratio where:
+      // 0 = no overlap
+      // 1 = edge of the other bubble reaches center of this bubble
+      float overlapRatio = Mathf.Clamp01(overlap / Radius);
 
       // Check for matching variants and sufficient overlap
       bool isMatchingVariant = Variant == otherBubble.Variant;
-
-      if (isMatchingVariant)
-      {
-        if (variantData.PopMatchingVariants && overlapRatio >= variantData.MinOverlapToPop)
-        {
-          Pop();
-          otherBubble.Pop();
-          return;
-        }
-        else if (variantData.MergeMatchingVariants && overlapRatio >= variantData.MinOverlapToMerge)
-        {
-          MergeWith(otherBubble);
-          return;
-        }
-      }
-      else if (variantData.PopOtherVariants && overlapRatio >= variantData.MinOverlapToPop)
-      {
-        otherBubble.Pop();
-        return;
-      }
 
       // Apply variant-based forces
       VariantForceType forceType = isMatchingVariant ?
@@ -210,6 +218,23 @@ public class Bubble : MonoBehaviour
 
       if (rb != null) rb.AddForce(force, ForceMode2D.Force);
       if (otherRb != null) otherRb.AddForce(-force, ForceMode2D.Force);
+
+      if (isMatchingVariant)
+      {
+        if (variantData.PopMatchingVariants && overlapRatio >= variantData.MinOverlapToPop)
+        {
+          Pop();
+          otherBubble.Pop();
+        }
+        else if (variantData.MergeMatchingVariants && overlapRatio >= variantData.MinOverlapToMerge)
+        {
+          MergeWith(otherBubble);
+        }
+      }
+      else if (variantData.PopOtherVariants && overlapRatio >= variantData.MinOverlapToPop)
+      {
+        otherBubble.Pop();
+      }
     }
     else if (other.CompareTag("Wall"))
     {
@@ -223,7 +248,7 @@ public class Bubble : MonoBehaviour
 
       // Calculate overlap and force
       float overlap = Mathf.Max(0, Radius - distance);
-      float overlapRatio = overlap / Radius;
+      float overlapRatio = Mathf.Clamp01(overlap / Radius);  // 1 = wall at center, 0 = no overlap
 
       // Apply repulsion force if overlapping
       if (overlap > 0)
@@ -341,10 +366,9 @@ public class Bubble : MonoBehaviour
           Vector2 direction = ((Vector2)collider.transform.position - position).normalized;
           float distance = Vector2.Distance(position, collider.transform.position);
 
-          // Calculate overlap between merge radius and target bubble
-          float combinedRadius = mergeRadius + targetBubble.Radius;
-          float overlap = Mathf.Max(0, combinedRadius - distance);
-          float overlapRatio = overlap / combinedRadius;
+          // Calculate overlap ratio where 1 = center overlap, 0 = no overlap
+          float overlap = Mathf.Max(0, mergeRadius - distance);
+          float overlapRatio = Mathf.Clamp01(overlap / targetBubble.Radius);
 
           float force = variantData.MergeForce * overlapRatio;
           rb.AddForce(direction * force, ForceMode2D.Impulse);
@@ -393,7 +417,7 @@ public class Bubble : MonoBehaviour
     return false;
   }
 
-  public bool Pop()
+  public bool Pop(bool allowSplit = true)
   {
     if (IsPopped) return false;
     if (Invulnerable) return false;
@@ -402,11 +426,11 @@ public class Bubble : MonoBehaviour
     IsPopped = true;
     _isAnimating = true;
     LevelStats.Instance.BubblesPopped.Increment();
-    StartCoroutine(PopEffect());
+    StartCoroutine(PopEffect(allowSplit));
     return true;
   }
 
-  private IEnumerator PopEffect()
+  private IEnumerator PopEffect(bool allowSplit)
   {
     try
     {
@@ -463,40 +487,75 @@ public class Bubble : MonoBehaviour
             Vector2 direction = (collider.transform.position - transform.position).normalized;
             float distance = Vector2.Distance(transform.position, collider.transform.position);
 
-            float combinedRadius = popRadius + targetBubble.Radius;
-            float overlap = Mathf.Max(0, combinedRadius - distance);
-            float overlapRatio = overlap / combinedRadius;
+            // Calculate overlap ratio where 1 = center overlap, 0 = no overlap
+            float overlap = Mathf.Max(0, popRadius - distance);
+            float overlapRatio = Mathf.Clamp01(overlap / targetBubble.Radius);
 
             // Apply pop force
             float force = variantData.PopForce * overlapRatio;
             rb.AddForce(direction * force, ForceMode2D.Impulse);
 
-            // Check if we should pop matching neighbors (using actual radii for touch detection)
-            float actualCombinedRadius = Radius + targetBubble.Radius;
-            float actualOverlap = Mathf.Max(0, actualCombinedRadius - distance);
-            float actualOverlapRatio = actualOverlap / actualCombinedRadius;
-
-            if (variantData.PopMatchingNeighbors && targetBubble.Variant == Variant &&
-                actualOverlapRatio >= variantData.MinOverlapToPop)
+            // Check if we should pop matching neighbors
+            if (variantData.PopMatchingNeighbors && targetBubble.Variant == Variant)
             {
-              float randomDelay = Random.Range(variantData.NeighborPopDelay.x, variantData.NeighborPopDelay.y);
-              targetBubble.PopWithDelay(randomDelay);
+              // Calculate actual overlap for neighbor popping
+              float actualOverlap = Mathf.Max(0, (Radius + targetBubble.Radius) - distance);
+              float actualOverlapRatio = Mathf.Clamp01(actualOverlap / Mathf.Min(Radius, targetBubble.Radius));
+
+              if (actualOverlapRatio >= variantData.MinOverlapToPop)
+              {
+                float randomDelay = Random.Range(variantData.NeighborPopDelay.x, variantData.NeighborPopDelay.y);
+                targetBubble.PopWithDelay(randomDelay);
+              }
             }
           }
         }
       }
 
       // Handle splitting
-      if (variantData.PopSplitCount > 0)
+      if (variantData.PopSplitCount > 0 && allowSplit)
       {
         float splitVolume = GetVolumeFromSize(initialSize) * variantData.PopSplitVolumeFactor;
         float volumePerSplit = splitVolume / variantData.PopSplitCount;
         float sizePerSplit = GetSizeFromVolume(volumePerSplit);
         int targetVariant = variantData.PopSplitVariant >= 0 ? variantData.PopSplitVariant : Variant;
 
-        // Only spawn up to available bubble slots
-        int availableSlots = GameRules.Data.MaxBubbles - Bubble.ActiveBubbles.Count + 1; // +1 because this bubble is being destroyed
-        int splitCount = Mathf.Min(variantData.PopSplitCount, availableSlots);
+        // Calculate how many bubbles we need to pop to make space
+        int currentBubbles = Bubble.ActiveBubbles.Count - 1; // -1 because this bubble is being destroyed
+        int neededSlots = variantData.PopSplitCount;
+        int availableSlots = GameRules.Data.MaxBubbles - currentBubbles;
+        int bubblesToPop = Mathf.Max(0, neededSlots - availableSlots);
+
+        // Try to pop random bubbles if needed and allowed
+        if (bubblesToPop > 0 && GameRules.Data.PopRandomToSpawn)
+        {
+          // Check if we've reached the minimum bubble count to start popping
+          bool shouldPopRandom = GameRules.Data.MinBubblesToPopRandom >= 0 ?
+              currentBubbles >= GameRules.Data.MinBubblesToPopRandom :
+              currentBubbles >= GameRules.Data.MaxBubbles;
+
+          if (shouldPopRandom)
+          {
+            for (int i = 0; i < bubblesToPop; i++)
+            {
+              if (!TryPopRandomBubble())
+              {
+                // If we failed to pop a bubble, reduce the split count
+                neededSlots = availableSlots;
+                break;
+              }
+              availableSlots++;
+            }
+          }
+          else
+          {
+            // Can't pop random bubbles yet, reduce split count
+            neededSlots = availableSlots;
+          }
+        }
+
+        // Only spawn up to available slots
+        int splitCount = Mathf.Min(neededSlots, availableSlots);
 
         for (int i = 0; i < splitCount; i++)
         {
@@ -542,6 +601,27 @@ public class Bubble : MonoBehaviour
     {
       _isAnimating = false;
     }
+  }
+
+  private bool TryPopRandomBubble()
+  {
+    if (Bubble.ActiveBubbles.Count == 0)
+    {
+      return false;
+    }
+
+    // Get a random bubble
+    int randomIndex = Random.Range(0, Bubble.ActiveBubbles.Count);
+    Bubble bubbleToPop = Bubble.ActiveBubbles[randomIndex];
+
+    // Check if the bubble can be popped
+    if (bubbleToPop != null && !bubbleToPop.Invulnerable && !bubbleToPop.IsPopped && bubbleToPop != this)
+    {
+      bubbleToPop.Pop(false);
+      return true;
+    }
+
+    return false;
   }
 
   public void PopWithDelay(float delay)
