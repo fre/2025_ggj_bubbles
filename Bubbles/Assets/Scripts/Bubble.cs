@@ -616,6 +616,12 @@ public class Bubble : MonoBehaviour
           _rb.AddForce(force, ForceMode2D.Force);
         }
       }
+      if (variantData.AttractToMouse > 0)
+      {
+        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 toMouse = mousePosition - (Vector2)transform.position;
+        _rb.AddForce(toMouse.normalized * variantData.AttractToMouse, ForceMode2D.Force);
+      }
     }
   }
 }

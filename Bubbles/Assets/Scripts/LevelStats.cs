@@ -101,7 +101,7 @@ public class LevelStats : SerializedMonoBehaviour
         break;
       case WinConditionType.MinBubblesOfEachVariantLeft:
         isWon = true;
-        for (int i = GameRules.Data.MinVariantId; i < GameRules.Data.VariantCount; i++)
+        for (int i = 0; i < GameRules.Data.VariantCount; i++)
         {
           int count = _bubblesByVariant.ContainsKey(i) ? _bubblesByVariant[i] : 0;
           if (count < GameRules.Data.TargetBubbleCount)
@@ -113,7 +113,7 @@ public class LevelStats : SerializedMonoBehaviour
         break;
       case WinConditionType.MaxBubblesOfEachVariantLeft:
         isWon = true;
-        for (int i = GameRules.Data.MinVariantId; i < GameRules.Data.VariantCount; i++)
+        for (int i = 0; i < GameRules.Data.VariantCount; i++)
         {
           int count = _bubblesByVariant.ContainsKey(i) ? _bubblesByVariant[i] : 0;
           if (count > GameRules.Data.TargetBubbleCount)

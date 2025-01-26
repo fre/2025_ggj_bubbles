@@ -31,6 +31,8 @@ public class BubbleVariant : ScriptableObject
   public float CoreSizeRatio = 0.6f;
   public float RepulsionForce = 5f;
   public float AttractionForce = 3f;
+  public float AttractToMouseOnHold = 0f;  // Force to apply towards mouse when held (0 = disabled)
+  public float AttractToMouse = 0f;
   public VariantForceType MatchingVariantForce = VariantForceType.Repulse;
   public VariantForceType NonMatchingVariantForce = VariantForceType.Repulse;
 
@@ -72,5 +74,4 @@ public class BubbleVariant : ScriptableObject
   public float GrowVolumeOnHold = 0f;
   public float GrowVolumeOnHover = 0f;
   public float GrowVolumeOverTime = 0f;
-  public float AttractToMouseOnHold = 0f;  // Force to apply towards mouse when held (0 = disabled)
 }

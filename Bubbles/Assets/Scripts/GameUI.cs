@@ -142,7 +142,7 @@ public class GameUI : MonoBehaviour
         case WinConditionType.MinBubblesOfEachVariantLeft:
           // Show the minimum count across all variants
           int minCount = int.MaxValue;
-          for (int i = GameRules.Data.MinVariantId; i < GameRules.Data.VariantCount; i++)
+          for (int i = 0; i < GameRules.Data.VariantCount; i++)
           {
             int count = LevelStats.Instance.GetBubbleCountForVariant(i);
             minCount = Mathf.Min(minCount, count);
@@ -152,7 +152,7 @@ public class GameUI : MonoBehaviour
         case WinConditionType.MaxBubblesOfEachVariantLeft:
           // Show the maximum count across all variants
           int maxCount = 0;
-          for (int i = GameRules.Data.MinVariantId; i < GameRules.Data.VariantCount; i++)
+          for (int i = 0; i < GameRules.Data.VariantCount; i++)
           {
             int count = LevelStats.Instance.GetBubbleCountForVariant(i);
             maxCount = Mathf.Max(maxCount, count);
@@ -217,7 +217,7 @@ public class GameUI : MonoBehaviour
     if (_levelText != null)
     {
       int currentLevel = SceneManager.GetActiveScene().buildIndex;
-      _levelText.text = $"{currentLevel}. {GameRules.Data.LevelName}";
+      _levelText.text = $"{currentLevel - 1}. {GameRules.Data.LevelName}";
     }
   }
 
