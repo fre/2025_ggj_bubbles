@@ -16,6 +16,7 @@ public class GameUI : MonoBehaviour
   private Label _levelText;
   private Button _prevButton;
   private Button _nextButton;
+  private Button _resetButton;
   private VisualElement _timeContainer;
   private VisualElement _clicksContainer;
   private VisualElement _poppedContainer;
@@ -45,6 +46,7 @@ public class GameUI : MonoBehaviour
     // Get navigation buttons
     _prevButton = root.Q<Button>("prev-button");
     _nextButton = root.Q<Button>("next-button");
+    _resetButton = root.Q<Button>("reset-button");
 
     // Wait for next frame to ensure LevelStats is initialized
     StartCoroutine(InitializeStats());
@@ -60,10 +62,9 @@ public class GameUI : MonoBehaviour
     LevelStats.Instance.BubblesPopped.OnValueChanged += UpdateTotalCount;
 
     // Subscribe to button clicks
-    var resetButton = _document.rootVisualElement.Q<Button>("reset-button");
-    resetButton.clicked += OnResetClicked;
-    _prevButton.clicked += OnPrevClicked;
-    _nextButton.clicked += OnNextClicked;
+    if (_resetButton != null) _resetButton.clicked += OnResetClicked;
+    if (_prevButton != null) _prevButton.clicked += OnPrevClicked;
+    if (_nextButton != null) _nextButton.clicked += OnNextClicked;
 
     // Initialize UI state
     UpdateUIState();
@@ -88,9 +89,8 @@ public class GameUI : MonoBehaviour
       LevelStats.Instance.BubblesPopped.OnValueChanged -= UpdateTotalCount;
     }
 
-    // Unsubscribe from button clicks
-    var resetButton = _document.rootVisualElement.Q<Button>("reset-button");
-    if (resetButton != null) resetButton.clicked -= OnResetClicked;
+    // Unsubscribe from button clicks - using stored references
+    if (_resetButton != null) _resetButton.clicked -= OnResetClicked;
     if (_prevButton != null) _prevButton.clicked -= OnPrevClicked;
     if (_nextButton != null) _nextButton.clicked -= OnNextClicked;
   }

@@ -69,7 +69,7 @@ public class BubbleRenderer : MonoBehaviour
       return;
     }
 
-    _material = GetComponent<MeshRenderer>().material;
+    _material = GetComponent<MeshRenderer>().sharedMaterial;
     if (_material == null)
     {
       Debug.LogError("Material is null! Cannot initialize BubbleRenderer.");
@@ -109,9 +109,9 @@ public class BubbleRenderer : MonoBehaviour
     _material.SetFloat(EdgeOpacityProperty, GameRules.Data.EdgeOpacity);
     _material.SetFloat(OpacityFalloffProperty, GameRules.Data.OpacityFalloff);
     _material.SetFloat(OpacitySmoothingProperty, GameRules.Data.OpacitySmoothing);
-    _material.SetVector(OutlineColorProperty, GameRules.Data.OutlineColor);
-    _material.SetVector(BackgroundColorProperty, GameRules.Data.BackgroundColor);
-    _material.SetVector(HoverOutlineColorProperty, GameRules.Data.HoverOutlineColor);
+    _material.SetColor(OutlineColorProperty, GameRules.Data.OutlineColor);
+    _material.SetColor(BackgroundColorProperty, GameRules.Data.BackgroundColor);
+    _material.SetColor(HoverOutlineColorProperty, GameRules.Data.HoverOutlineColor);
     _material.SetFloat(HoverOutlineThicknessProperty, GameRules.Data.HoverOutlineThickness);
     _material.SetFloat(OutlineSmoothRadiusProperty, GameRules.Data.OutlineSmoothRadius);
     _material.SetFloat(SmallRadiusPreservationFactorProperty, GameRules.Data.SmallRadiusPreservationFactor);
@@ -220,7 +220,7 @@ public class BubbleRenderer : MonoBehaviour
   {
     if (_bubbleDataTexture != null)
     {
-      Destroy(_bubbleDataTexture);
+      DestroyImmediate(_bubbleDataTexture);
     }
   }
 }

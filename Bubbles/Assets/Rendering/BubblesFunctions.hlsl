@@ -5,9 +5,10 @@
 
 float4 GetBubbleData(UnityTexture2D BubbleData, UnitySamplerState BubbleDataSampler, float bubbleIndex, int column, int MaxBubbleCount)
 {
-    // Convert raw index to normalized UV coordinate
-    float2 uv = float2((float)column / 4, bubbleIndex / MaxBubbleCount);
-    return SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, uv, 0);
+    // Ensure precise UV calculation by sampling from texel centers
+    float columnUV = (column + 0.5) / 4.0;  // Center of texel
+    float rowUV = (bubbleIndex + 0.5) / float(MaxBubbleCount);  // Center of texel
+    return SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, float2(columnUV, rowUV), 0);
 }
 
 void FindClosestBubbles_float(
@@ -30,13 +31,13 @@ void FindClosestBubbles_float(
     for(int i = 0; i < (int)BubbleCount; i++)
     {
         // Read from column 0 (position data)
-        float2 uv = float2(0, (float)i / MaxBubbleCount); // Normalize index for UV
-        float4 bubbleData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, uv, 0);
+        float rowUV = (i + 0.5) / float(MaxBubbleCount); // Center of texel
+        float4 bubbleData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, float2(0.5/4.0, rowUV), 0);
         float2 center = bubbleData.xy;
         float radius = bubbleData.z;
         
         // Get wave data from column 3
-        float4 waveData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, float2(3.0/4.0, (float)i / MaxBubbleCount), 0);
+        float4 waveData = SAMPLE_TEXTURE2D_LOD(BubbleData, BubbleDataSampler, float2(3.5/4.0, rowUV), 0);
         float waveAmplitude = waveData.r;
         float waveCount = waveData.g;
         float waveRotation = waveData.b;
