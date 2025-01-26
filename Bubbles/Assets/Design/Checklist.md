@@ -12,41 +12,43 @@
 - [ ] Split bubbles
 - [ ] Click to shoot
 - [ ] Break on a timer
-- [ ] Grow on a timer
-- [ ] Grow on click
+- [ ] Grow/shrink on a timer
+- [ ] Grow on click/hold
 - [ ] Pop below size
 - [ ] Pop others only
-- [ ] Merge into other variant
-- [ ] Dancing bubble level with secret
+- [ ] Merge creates a different variant
+- [ ] Lose volume when merging (ratio)
+- [ ] Invisible bubbles
+- [ ] Spike that pops bubble
+
+## Levels / scenes
+- [ ] Menu / starting screen
+- [ ] End scene with dancing bubble and secret
 
 ## Bubble Spawning & Variants
-- [ ] Spawn only when free
-- [ ] Min variant spawn setting
-- [ ] Spawner variant
-- [ ] Merge radius loss
-- [ ] Invisible bubble
-- [ ] Spike pops bubble
+- [ ] Spawn only when spawner output is free
+- [ ] Min variant ID spawn setting
+- [ ] Spawner variants
 
 ## Visual Effects
 - [X] Wiggle/wave render
-- [ ] Wave per bubble
+- [ ] Wave settings per bubble variant
 - [ ] Configurable wave shape
 - [ ] Configurable interface thickness
-- [ ] Configurable hue
+- [ ] Configurable hue per variant
 
 ## UI/UX
-- [ ] Title scene
 - [ ] Rename levels
 - [ ] Accessibility options
+- [ ] Camera always keeps full vertical or horizontal field in view
 
 ## Technical Improvements
 - [X] Game rule utilities implementation
 - [X] Fix raycast functionality
 - [X] Physics system optimization
-- [ ] Raycat fix
+- [X] Raycat fix
 
 ## Game loop
-- [ ] Store best score by level
 - [ ] Save high scores
 
 ## Audio

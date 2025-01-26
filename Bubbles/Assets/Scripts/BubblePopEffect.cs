@@ -13,13 +13,15 @@ public class BubblePopEffect : MonoBehaviour
     _material = GetComponent<ParticleSystemRenderer>().material;
 
     // Set color based on bubble's hue
-    Color bubbleColor = Color.HSVToRGB(sourceBubble.Hue, 1f, 1f);
+    Color bubbleColor = Color.HSVToRGB(sourceBubble.Hue, sourceBubble.Saturation, sourceBubble.Value)
+      * Mathf.Max(1, GameRules.Data.EdgeOpacity);
     _material.SetColor(ColorProperty, bubbleColor);
 
     // Set outline parameters from game rules
     _material.SetColor(OutlineColorProperty, GameRules.Data.OutlineColor);
     _material.SetFloat(OutlineThicknessProperty, GameRules.Data.OutlineThickness);
     _material.SetFloat(HueProperty, sourceBubble.Hue);
+    _material.SetColor(ColorProperty, bubbleColor);
 
     transform.localScale = Vector3.one * sourceBubble.Size;
 

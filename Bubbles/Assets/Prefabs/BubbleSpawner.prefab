@@ -45,3 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BubblePrefab: {fileID: 1048164319020037151, guid: 5f65701d6071dc845a453801ec95b48b, type: 3}
+  WallLayer:
+    serializedVersion: 2
+    m_Bits: 1

@@ -16,7 +16,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3000
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
@@ -68,17 +68,22 @@ Material:
     - _EdgeOpacity: 1
     - _EnableExternalAlpha: 0
     - _Float: 0
+    - _HoverOutlineThickness: 0
     - _MaxBubbleCount: 100
     - _OpacityFalloff: 2.28
+    - _OpacitySmoothing: 0
+    - _OutlineSmoothRadius: 0
     - _OutlineThickness: 0.05
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _SmallRadiusPreservationFactor: 0
     - _WorldMaxPos: 10
     - _WorldMinPos: -10
     - _ZWrite: 0
     m_Colors:
     - _BackgroundColor: {r: 0.39845133, g: 0.43276215, b: 0.6981132, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _HoverOutlineColor: {r: 0, g: 0, b: 0, a: 0}
     - _OutlineColor: {r: 0.23584905, g: 0.23584905, b: 0.23584905, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

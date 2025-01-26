@@ -4,6 +4,7 @@ public class BubbleSpawner : MonoBehaviour
 {
     [Header("Spawn Settings")]
     [SerializeField] private GameObject BubblePrefab;
+    [SerializeField] private LayerMask WallLayer; // Layer for walls
 
     private float _nextSpawnTime;
 
@@ -26,6 +27,29 @@ public class BubbleSpawner : MonoBehaviour
         }
     }
 
+    private bool IsPositionClear(Vector3 position, float bubbleSize)
+    {
+        // Cast a small circle to check for walls
+        RaycastHit2D[] hits = Physics2D.CircleCastAll(
+            position,          // origin
+            bubbleSize / 2,    // radius (half the bubble size)
+            Vector2.zero,      // direction (not used since we're just checking position)
+            0f,               // distance
+            WallLayer         // layer mask for walls
+        );
+
+        return hits.Length == 0;
+    }
+
+    private Vector3 GetRandomSpawnPosition()
+    {
+        return transform.position + new Vector3(
+            Random.Range(-GameRules.Data.WorldSize.x / 2, GameRules.Data.WorldSize.x / 2),
+            Random.Range(-GameRules.Data.WorldSize.y / 2, GameRules.Data.WorldSize.y / 2),
+            0f
+        );
+    }
+
     private void SpawnBubble()
     {
         if (Bubble.ActiveBubbles.Count >= GameRules.Data.MaxBubbles)
@@ -34,26 +58,40 @@ public class BubbleSpawner : MonoBehaviour
             return;
         }
 
-        // Calculate random position within spawn area
-        Vector3 randomPosition = transform.position + new Vector3(
-            Random.Range(-GameRules.Data.WorldSize.x / 2, GameRules.Data.WorldSize.x / 2),
-            Random.Range(-GameRules.Data.WorldSize.y / 2, GameRules.Data.WorldSize.y / 2),
-            0f
-        );
+        // Get random variant info first to know the size
+        int variant = Random.Range(0, GameRules.Data.VariantCount);
+        BubbleVariant variantData = GameRules.BubbleVariantData(variant);
+        float bubbleSize = Random.Range(variantData.SizeRange.x, variantData.SizeRange.y);
 
-        // Instantiate the bubble
-        GameObject bubble = Instantiate(BubblePrefab, randomPosition, Quaternion.identity);
+        // Try up to 5 times to find a clear position
+        Vector3 spawnPosition = Vector3.zero;
+        bool foundClearPosition = false;
+
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            spawnPosition = GetRandomSpawnPosition();
+            if (IsPositionClear(spawnPosition, bubbleSize))
+            {
+                foundClearPosition = true;
+                break;
+            }
+        }
+
+        if (!foundClearPosition)
+        {
+            return; // Couldn't find a clear position after 5 attempts
+        }
+
+        // Instantiate the bubble at the clear position
+        GameObject bubble = Instantiate(BubblePrefab, spawnPosition, Quaternion.identity);
         bubble.name = BubblePrefab.name;
 
         // Set bubble properties
         Bubble bubbleComponent = bubble.GetComponent<Bubble>();
         if (bubbleComponent != null)
         {
-            int variant = Random.Range(0, GameRules.Data.VariantCount);
-            BubbleVariant variantData = GameRules.BubbleVariantData(variant);
-
             bubbleComponent.Variant = variant;
-            bubbleComponent.Size = Random.Range(variantData.SizeRange.x, variantData.SizeRange.y);
+            bubbleComponent.Size = bubbleSize;
             bubbleComponent.CoreSizeRatio = variantData.CoreSizeRatio;
             bubbleComponent.UpdateShape();
 

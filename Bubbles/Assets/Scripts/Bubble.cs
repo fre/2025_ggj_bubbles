@@ -14,6 +14,8 @@ public class Bubble : MonoBehaviour
   public bool Invulnerable = false;
   public int Variant;
   public float Hue => (float)Variant / GameRules.Data.VariantCount;
+  public float Saturation => GameRules.BubbleVariantData(Variant).ColorSaturation;
+  public float Value => GameRules.BubbleVariantData(Variant).ColorValue;
   public bool IsPopped { get; private set; }
   private bool _isAnimating = false; // Guard flag for animations
   public float HoverT => _currentHoverT; // Expose hover transition for renderer
